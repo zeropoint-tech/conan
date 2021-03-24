@@ -1,6 +1,6 @@
 # README #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+This repository contains configurations, helpers and extensions for the Conan package manager.
 
 ### What is this repository for? ###
 
@@ -9,6 +9,10 @@ This README would normally document whatever steps are necessary to get your app
 * [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
 ### How do I get set up? ###
+
+#### To install Conan
+
+```pip install --upgrade conan```
 
 * Summary of set up
 * Configuration
@@ -25,5 +29,4 @@ This README would normally document whatever steps are necessary to get your app
 
 ### Who do I talk to? ###
 
-* Repo owner or admin
-* Other community or team contact
+* Anders Persson <anders.persson@zptcorp.com>
