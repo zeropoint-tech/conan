@@ -307,8 +307,7 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
         commits_behind = commits_behind_tag
 
     if commits_behind > 0:
-        if version.patch > 0:
-            version.patch += 1
+        version.patch += 1
         version.prerelease = f"rc{commits_behind}-g{ref[:10]}"
     return str(version)
 
