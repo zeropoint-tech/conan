@@ -235,6 +235,7 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
     """
 
     git = tools.Git()
+    git_root = git.run("rev-parse --show-toplevel")
 
     if branch is None:
         try:
@@ -253,7 +254,7 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
         # If not in a git repo this command will output error to stderr.
         # So we redirect the error message to /dev/null
         prev_tag = git.run(f"describe --tags --abbrev=0 --match {name}/\\* {ref} 2> /dev/null")
-        commits_behind_tag = int(git.run(f"rev-list --count {prev_tag}..{ref} -- {name}"))
+        commits_behind_tag = int(git.run(f"rev-list --count {prev_tag}..{ref} -- {git_root}/{name}"))
     except:
         prev_tag = "0.0.0"
         commits_behind_tag = 0
@@ -284,7 +285,7 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
                 # print(base_candidate, ref, is_ancestor)
                 if base_candidate != ref:
                     base_ref = base_candidate
-                    commits_behind_branch = int(git.run(f"rev-list --count {base_ref}..{ref} -- {name}"))
+                    commits_behind_branch = int(git.run(f"rev-list --count {base_ref}..{ref} -- {git_root}/{name}"))
                     release = branch[len(prefix):]
                     base_version = VersionRep(release)
                     break
