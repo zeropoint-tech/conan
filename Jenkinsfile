@@ -19,12 +19,6 @@ pipeline {
       steps {
         rtBuildInfo(
           captureEnv: true,
-          // Maximum builds to keep in Artifactory.
-          maxBuilds: 5,
-          // Maximum days to keep the builds in Artifactory.
-          maxDays: 7,
-          // Also delete the build artifacts when deleting a build.
-          deleteBuildArtifacts: true,
         )
         rtConanRun(
           clientId: "myConanClient",
