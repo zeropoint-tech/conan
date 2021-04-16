@@ -2,14 +2,18 @@ pipeline {
 
   agent any
 
+  environment {
+    CONAN_REVISIONS_ENABLED=1
+  }
+
   stages {
-	  stage('Conan configuration') {
+    stage('Conan configuration') {
       steps {
         rtConanClient (id: "myConanClient")
         rtConanRemote (
-          name: "artifactory",
+          name: "conan",
           serverId: "artifactory",
-          repo: "conan-local",
+          repo: "conan",
           clientId: "myConanClient",
         )
       }
@@ -26,7 +30,7 @@ pipeline {
         )
         rtConanRun(
           clientId: "myConanClient",
-          command: "upload -r artifactory semver --all --confirm"
+          command: "upload -r conan semver --all --confirm"
         )
         rtPublishBuildInfo (
           serverId: "artifactory"
