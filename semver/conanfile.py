@@ -310,6 +310,9 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
     if commits_behind > 0:
         version.patch += 1
         version.prerelease = f"rc{commits_behind}-g{ref[:10]}"
+
+    print(f"Calculated semantic version {version} from commit {ref} with tag {prev_tag} and branch {release}")
+
     return str(version)
 
 
