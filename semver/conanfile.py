@@ -240,6 +240,9 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None, recipe_folder=No
     if not recipe_folder:
         recipe_folder = git_root
 
+    if "true" == git.run("rev-parse --is-shallow-repository"):
+            raise ConanInvalidConfiguration("Semantic versioning requires a full repository history")
+
     print(f"Working with recipe in folder {recipe_folder}")
 
     if branch is None:
