@@ -46,7 +46,7 @@ class GitSemVer(object):
         if self.version != None:
             return
 
-        self.version = git_get_semver(self.name)
+        self.version = git_get_semver(name=self.name, recipe_folder=self.recipe_folder)
 
 
 def parseVer(version):
@@ -131,7 +131,7 @@ class VersionRep:
 
 
 
-def git_get_semver(name="module", ref_name="HEAD", branch=None):
+def git_get_semver(name="module", ref_name="HEAD", branch=None, recipe_folder=None):
     """
     Calculate the Semantic Version base on git tags and brances.
 
@@ -237,6 +237,9 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
     git = tools.Git()
     git_root = git.run("rev-parse --show-toplevel")
 
+    if not recipe_folder:
+        recipe_folder = git_root
+
     if branch is None:
         try:
             branch = git.get_branch()
@@ -254,7 +257,7 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
         # If not in a git repo this command will output error to stderr.
         # So we redirect the error message to /dev/null
         prev_tag = git.run(f"describe --tags --abbrev=0 --match {name}/\\* {ref} 2> /dev/null")
-        commits_behind_tag = int(git.run(f"rev-list --count {prev_tag}..{ref} -- {git_root}/{name}"))
+        commits_behind_tag = int(git.run(f"rev-list --count {prev_tag}..{ref} -- {recipe_folder}"))
     except:
         prev_tag = "0.0.0"
         commits_behind_tag = 0
@@ -285,7 +288,7 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None):
                 # print(base_candidate, ref, is_ancestor)
                 if base_candidate != ref:
                     base_ref = base_candidate
-                    commits_behind_branch = int(git.run(f"rev-list --count {base_ref}..{ref} -- {git_root}/{name}"))
+                    commits_behind_branch = int(git.run(f"rev-list --count {base_ref}..{ref} -- {recipe_folder}"))
                     release = branch[len(prefix):]
                     base_version = VersionRep(release)
                     break
@@ -326,7 +329,7 @@ class Pkg(ConanFile):
         if self.version != None:
             return
 
-        self.version = git_get_semver(self.name)
+        self.version = git_get_semver(name=self.name, recipe_folder=self.recipe_folder)
 
     pass
 
