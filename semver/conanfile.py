@@ -237,10 +237,6 @@ def git_get_semver(name="module", ref_name="HEAD", branch=None, recipe_folder=No
     git = tools.Git()
     git_root = git.run("rev-parse --show-toplevel")
 
-    if "true" == git.run("rev-parse --is-shallow-repository"):
-        print("Semantic versioning needs the full history, calling 'git fetch --unshallow'")
-        git.run("fetch --unshallow")
-
     if not recipe_folder:
         recipe_folder = git_root
 
