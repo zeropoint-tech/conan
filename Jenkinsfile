@@ -19,14 +19,14 @@ pipeline {
       }
     }
 
-    stage('Export recipies') {
+    stage('Build') {
       steps {
         rtBuildInfo(
           captureEnv: true,
         )
         rtConanRun(
           clientId: "myConanClient",
-          command: "export semver"
+          command: "create semver"
         )
         rtConanRun(
           clientId: "myConanClient",
