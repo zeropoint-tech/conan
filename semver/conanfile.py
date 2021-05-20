@@ -172,7 +172,9 @@ def get_version_from_string(string, name="module"):
     return VersionRep("0.0.0")
 
 
-def git_get_semver(ref_name="HEAD", name="module", master="master", recipe_folder=None):
+def git_get_semver(
+    ref_name="HEAD", name="module", master="origin/HEAD", recipe_folder=None
+):
     """
     Calculate the Semantic Version based on git tags and brances.
 
