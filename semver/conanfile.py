@@ -91,7 +91,7 @@ def parseGitDescribe(tag):
 class VersionRep:
     """
     >>> str(VersionRep("1.2.3-5-gabcdef"))
-    '1.2.3-rc5-gabcdef'
+    '1.2.3-5-gabcdef'
     >>> VersionRep("0.0.0") == VersionRep("0.0.0")
     True
     >>> VersionRep("0.0.1") < VersionRep("0.0.0")
@@ -115,16 +115,16 @@ class VersionRep:
         if pa:
             self.patch = int(pa)
         if ahead and int(ahead) > 0:
-            self.prerelease = "rc" + ahead
+            self.prerelease = ahead
         if commit:
-            self.prerelease += "-" + commit
+            self.build = commit
 
     def __str__(self):
         str = f"{self.major}.{self.minor}.{self.patch}"
         if len(self.prerelease) > 0:
             str += "-" + self.prerelease
         if len(self.build) > 0:
-            str += "+" + self.build
+            str += "-" + self.build
         return str
 
     def __lt__(self, other):
@@ -190,7 +190,7 @@ def git_get_semver(
     PARENT-TAGGED:
          If a version has a parent that is TAGGED,
          add one to the patch version of the tag and add a
-         prerelease "rcN" where N is the number of commits
+         prerelease "N" where N is the number of commits
          from the tagged version.
          The number of commits is calculated as the sum of all commits
          leading to the current version. See the example for O below.
@@ -222,61 +222,61 @@ def git_get_semver(
         >>> git_get_semver("B")
         '0.1.3'
         >>> git_get_semver("C")
-        '0.1.4-rc1-g0e7e30bc68'
+        '0.1.4-1-g0e7e30bc68'
 
         D is a merge where both ancestors are TAGGED, use the larger SemVer
         and proceed as PARENT-TAGGED
         >>> git_get_semver("D")
-        '0.2.2-rc1-gced7ff8494'
+        '0.2.2-1-gced7ff8494'
 
         E and F are both on the "release/module/0.2" branch and are interpreted
         as RELEASE-BRANCH.
         G is TAGGED and H is RELEASE-BRANCH-TAGGED.
         >>> git_get_semver("E", master="test")
-        '0.2.0-rc1-g8213582ebb'
+        '0.2.0-1-g8213582ebb'
         >>> git_get_semver("F", master="test")
-        '0.2.0-rc2-g8c990ed70f'
+        '0.2.0-2-g8c990ed70f'
         >>> git_get_semver("G", recipe_folder="test")
         '0.2.1'
         >>> git_get_semver("H")
-        '0.2.2-rc1-g25c7e7e593'
+        '0.2.2-1-g25c7e7e593'
 
         I is on the "dev" branch and PARENT-TAGGED from B
         >>> git_get_semver("I")
-        '0.1.4-rc2-gb4c695c5bb'
+        '0.1.4-2-gb4c695c5bb'
 
         J is a merge of the release branch into "dev", since there is no tag
         ancestor in the release branch, J is PARENT-TAGGED from B.
         The number of commits is calculated as count(J, I, E, C)
         K, L, M, and N follows J
         >>> git_get_semver("J")
-        '0.1.4-rc4-g2302af49d9'
+        '0.1.4-4-g2302af49d9'
         >>> git_get_semver("K")
-        '0.1.4-rc5-gf749b08edc'
+        '0.1.4-5-gf749b08edc'
         >>> git_get_semver("L")
-        '0.1.4-rc5-g3dba32efbb'
+        '0.1.4-5-g3dba32efbb'
         >>> git_get_semver("M")
-        '0.1.4-rc6-g7e9ced54a9'
+        '0.1.4-6-g7e9ced54a9'
         >>> git_get_semver("N")
-        '0.1.4-rc7-gae88aaf43a'
+        '0.1.4-7-gae88aaf43a'
 
         O is a merge of the release branch into "dev". In this case there
         is a tagged ancestor in the release branch, so O is PARENT-TAGGED from G
 
         The number of commits is calculated as count(O, K, J, I, C)
         >>> git_get_semver("O")
-        '0.2.2-rc4-gb978aaf2a6'
+        '0.2.2-4-gb978aaf2a6'
 
         >>> git_get_semver("P")
-        '0.2.2-rc5-g5d7a03e5ca'
+        '0.2.2-5-g5d7a03e5ca'
 
         Q is a merge of the "dev" branch into "feat/amazing". It inherits the
         tagged ancestor and is PARENT-TAGGED from G.
         The number of commits is calculated as count(Q, N, M, L, O, K, J, I, C)
         >>> git_get_semver("Q")
-        '0.2.2-rc8-g7281b66edf'
+        '0.2.2-8-g7281b66edf'
         >>> git_get_semver("R")
-        '0.2.2-rc9-g050e3f48dd'
+        '0.2.2-9-g050e3f48dd'
     """
 
     log = logging.getLogger("semver")
@@ -407,7 +407,7 @@ def git_get_semver(
             version.patch += 1
 
     if commits_behind > 0:
-        version.prerelease = f"rc{commits_behind}-g{ref[:10]}"
+        version.prerelease = f"{commits_behind}-g{ref[:10]}"
 
     log.info(
         f"Calculated semantic version {version} from commit {ref[:10]} with tag {prev_tag} and branch {release}"
