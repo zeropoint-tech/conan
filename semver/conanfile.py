@@ -197,8 +197,8 @@ def git_get_semver(
 
     RELEASE-BRANCH:
          If a version is on a release branch "release/module/major.minor",
-         find the common ancestor and create a SemVer as in PARENT-TAGGED,
-         but with the ancestor as the reference commit.
+         find the common ancestor tag base/module/major.minor and create
+         a SemVer as in PARENT-TAGGED, but with the ancestor as the reference commit.
 
     RELEASE-BRANCH-TAGGED:
          A combination of RELEASE-BRANCH and PARENT-TAGGED.
@@ -206,6 +206,8 @@ def git_get_semver(
 
     Examples:
 
+                                                 U                       release/module/1.0
+                                                /
         A---B(module/0.1.3)---C(other/0.3.5)---D-----------------        test
                               |\              /                  \
                               | E---F--------G(module/0.2.1)---H  \      release/module/0.2
@@ -222,12 +224,12 @@ def git_get_semver(
         >>> git_get_semver("B")
         '0.1.3'
         >>> git_get_semver("C")
-        '0.1.4-1-g0e7e30bc68'
+        '0.2.0-0-g0e7e30bc68'
 
         D is a merge where both ancestors are TAGGED, use the larger SemVer
         and proceed as PARENT-TAGGED
         >>> git_get_semver("D")
-        '0.2.2-1-gced7ff8494'
+        '0.3.0-0-gced7ff8494'
 
         E and F are both on the "release/module/0.2" branch and are interpreted
         as RELEASE-BRANCH.
@@ -277,6 +279,14 @@ def git_get_semver(
         '0.2.2-8-g7281b66edf'
         >>> git_get_semver("R")
         '0.2.2-9-g050e3f48dd'
+
+        U is the only commit on the release/1.0 branch
+        >>> git_get_semver("U", master="test")
+        '1.0.0-1-g1087af76ab'
+
+        V is a merge of dev into release/0.2
+        >>> git_get_semver("V", master="test")
+        '0.2.3-2-gcb329aff46'
     """
 
     log = logging.getLogger("semver")
@@ -312,7 +322,10 @@ def git_get_semver(
         try:
             return git.run(f"rev-parse --verify {ref}")
         except:
-            return None
+            try:
+                return git.run(f"rev-parse --verify origin/{ref}")
+            except:
+                return None
 
     # Find nearest tag ancestor
     prev_tag = get_nearest_tag(name, ref)
@@ -333,59 +346,41 @@ def git_get_semver(
 
     # find branches containing the commit
     release_branches = git.run(
-        f"branch --all --list 'release/{name}/*' --contains {ref}"
+        f"branch --all --list 'release/{name}/*' --list 'origin/release/{name}/*' --contains {ref}"
     ).split()
 
-    def fork_point(master_ref, branch):
-        log.debug(f"fork_point {branch} {master_ref[:10]}")
-        try:
-            return git.run(f"merge-base --fork-point {branch} {master_ref}")
-        except:
-            return None
-
     def is_ancestor(fp):
-        log.debug(f"is_ancestor {fp[:10]} {ref[:10]}")
+        log.debug(f"is_ancestor {fp} {ref}")
         try:
             git.run(f"merge-base --is-ancestor {fp} {ref}")
             return True
         except:
             return False
 
-    def filter_branch(branch):
-        master_ref = rev_parse(master)
-        while master_ref:
-            fp = fork_point(master_ref, branch)
-            if fp is None:
-                log.debug("no fork point")
-                return None
-            if fp == ref:
-                log.debug("fork_point reached ref")
-                return None
-            if fp == tag_ref:
-                log.debug("fork_point reached tag")
-                return None
-            if is_ancestor(fp):
-                log.debug(f"found {fp[:10]} {git.run(f'describe --all {fp}')}")
-                return (branch, fp)
-            else:
-                master_ref = rev_parse(master_ref + "^")
-
-    log.debug(release_branches)
-    release_branches = list(filter(None, map(filter_branch, release_branches)))
-    log.debug(release_branches)
-    base_candidate = None
-    for (branch, base_ref) in release_branches:
-        for prefix in [f"release/{name}/", f"origin/release/{name}"]:
+    def get_release_base(branch):
+        for prefix in [f"release/{name}/", f"remotes/origin/release/{name}/"]:
             if branch.startswith(prefix):
-                release = branch[len(prefix) :]
-                base_version = VersionRep(release)
-                base_candidate = base_ref
-                commits_behind_branch = int(
-                    git.run(
-                        f"rev-list --count {base_candidate}..{ref} -- {recipe_folder}"
+                version = branch[len(prefix) :]
+                tag_candidate = f"base/{name}/{version}"
+                if not git.run(f"tag -l {tag_candidate}").strip() == tag_candidate:
+                    raise Exception(f"No base tag for branch {branch} found")
+                if is_ancestor(tag_candidate):
+                    commits_behind = int(
+                        git.run(
+                            f"rev-list --count {tag_candidate}..{ref} -- {recipe_folder}"
+                        )
                     )
-                )
-                break
+                    return (tag_candidate, VersionRep(version), commits_behind)
+        return None
+
+    log.debug(f"relase_branches={release_branches}")
+    release_base_tags = list(filter(None, map(get_release_base, release_branches)))
+    log.debug(f"release_base_tags={release_base_tags}")
+    base_candidate = None
+    base_version = None
+    commits_behind_branch = None
+    if release_base_tags:
+        (base_candidate, base_version, commits_behind_branch) = release_base_tags[0]
 
     commits_behind = commits_behind_tag
     if commits_behind_branch:
@@ -400,14 +395,13 @@ def git_get_semver(
     if base_version and tag_version < base_version:
         version = base_version
         commits_behind = commits_behind_branch
+        version.prerelease = f"{commits_behind}-g{ref[:10]}"
     else:
         version = tag_version
         commits_behind = commits_behind_tag
         if commits_behind > 0:
             version.patch += 1
-
-    if commits_behind > 0:
-        version.prerelease = f"{commits_behind}-g{ref[:10]}"
+            version.prerelease = f"{commits_behind}-g{ref[:10]}"
 
     log.info(
         f"Calculated semantic version {version} from commit {ref[:10]} with tag {prev_tag} and branch {release}"
@@ -439,5 +433,7 @@ class Pkg(ConanFile):
 if __name__ == "__main__":
     import doctest
 
-    logging.basicConfig(level=logging.DEBUG)
-    doctest.testmod()
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    (failed, all) = doctest.testmod(verbose=True)
+    if failed > 0:
+        exit(1)
