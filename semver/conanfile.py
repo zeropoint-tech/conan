@@ -49,7 +49,7 @@ class GitSemVer(object):
         if self.version != None:
             return
 
-        self.version = git_get_semver(name=self.name, recipe_folder=self.recipe_folder)
+        self.version = git_get_semver(name=self.name, watch_folders=self.recipe_folder)
 
 
 def parseVer(version):
@@ -173,7 +173,7 @@ def get_version_from_string(string, name="module"):
 
 
 def git_get_semver(
-    ref_name="HEAD", name="module", master="origin/HEAD", recipe_folder=None
+    ref_name="HEAD", name="module", master="origin/HEAD", watch_folders=[]
 ):
     """
     Calculate the Semantic Version based on git tags and brances.
@@ -238,7 +238,7 @@ def git_get_semver(
         '0.2.0-1-g8213582ebb'
         >>> git_get_semver("F", master="test")
         '0.2.0-2-g8c990ed70f'
-        >>> git_get_semver("G", recipe_folder="test")
+        >>> git_get_semver("G", watch_folders="test")
         '0.2.1'
         >>> git_get_semver("H")
         '0.2.2-1-g25c7e7e593'
@@ -306,13 +306,19 @@ def git_get_semver(
     except:
         raise ConanInvalidConfiguration(f"Not a valid reference {ref_name}")
 
-    # Validate recipe_folder
-    if not recipe_folder:
-        recipe_folder = git.get_repo_root()
+    # Validate watch_folders
+    if isinstance(watch_folders, str):
+        watch_folders = [watch_folders]
 
-    recipe_folder = os.path.relpath(recipe_folder, git.get_repo_root())
+    if not watch_folders:
+        waitch_folders = [git.get_repo_root()]
 
-    log.info(f"Working with recipe in folder {recipe_folder}")
+    for folder in watch_folders:
+        folder = os.path.relpath(folder, git.get_repo_root())
+
+    watch_folders_str = " ".join(watch_folders)
+
+    log.info(f"Working with dependencies in {watch_folders_str}")
 
     def get_nearest_tag(name, ref):
         return git.run(f"describe --tags --abbrev=0 --always --match {name}/\\* {ref}")
@@ -330,7 +336,7 @@ def git_get_semver(
     # Find nearest tag ancestor
     prev_tag = get_nearest_tag(name, ref)
     commits_behind_tag = int(
-        git.run(f"rev-list --count {prev_tag}..{ref} -- {recipe_folder}")
+        git.run(f"rev-list --count {prev_tag}..{ref} -- {watch_folders_str}")
     )
 
     tag_version = get_version_from_string(prev_tag, name=name)
@@ -367,7 +373,7 @@ def git_get_semver(
                 if is_ancestor(tag_candidate):
                     commits_behind = int(
                         git.run(
-                            f"rev-list --count {tag_candidate}..{ref} -- {recipe_folder}"
+                            f"rev-list --count {tag_candidate}..{ref} -- {watch_folders_str}"
                         )
                     )
                     return (tag_candidate, VersionRep(version), commits_behind)
@@ -425,7 +431,7 @@ class Pkg(ConanFile):
             return
 
         logging.basicConfig(level=logging.DEBUG)
-        self.version = git_get_semver(name=self.name, recipe_folder=self.recipe_folder)
+        self.version = git_get_semver(name=self.name, watch_folders=self.recipe_folder)
 
     pass
 
