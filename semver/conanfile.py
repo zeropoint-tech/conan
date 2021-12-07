@@ -49,7 +49,9 @@ class GitSemVer(object):
         if self.version != None:
             return
 
-        self.version = git_get_semver(name=self.name, watch_folders=self.recipe_folder)
+        self.version = git_get_semver_multi(
+            name=self.name, watch_folders=[self.recipe_folder]
+        )
 
 
 def parseVer(version):
