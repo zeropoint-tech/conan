@@ -173,6 +173,14 @@ def get_version_from_string(string, name="module"):
 
 
 def git_get_semver(
+    ref_name="HEAD", name="module", master="origin/HEAD", recipe_folder=None
+):
+    return git_get_semver_multi(
+        ref_name, name, master, watch_folders=[recipe_folder] if recipe_folder else []
+    )
+
+
+def git_get_semver_multi(
     ref_name="HEAD", name="module", master="origin/HEAD", watch_folders=[]
 ):
     """
@@ -238,7 +246,7 @@ def git_get_semver(
         '0.2.0-1-g8213582ebb'
         >>> git_get_semver("F", master="test")
         '0.2.0-2-g8c990ed70f'
-        >>> git_get_semver("G", watch_folders="test")
+        >>> git_get_semver("G", recipe_folder="test")
         '0.2.1'
         >>> git_get_semver("H")
         '0.2.2-1-g25c7e7e593'
@@ -379,7 +387,7 @@ def git_get_semver(
                     return (tag_candidate, VersionRep(version), commits_behind)
         return None
 
-    log.debug(f"relase_branches={release_branches}")
+    log.debug(f"release_branches={release_branches}")
     release_base_tags = list(filter(None, map(get_release_base, release_branches)))
     log.debug(f"release_base_tags={release_base_tags}")
     base_candidate = None
@@ -431,7 +439,9 @@ class Pkg(ConanFile):
             return
 
         logging.basicConfig(level=logging.DEBUG)
-        self.version = git_get_semver(name=self.name, watch_folders=self.recipe_folder)
+        self.version = git_get_semver_multi(
+            name=self.name, watch_folders=[self.recipe_folder]
+        )
 
     pass
 
