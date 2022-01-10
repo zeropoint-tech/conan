@@ -33,6 +33,7 @@ import os
 import glob
 import sys
 from conans import ConanFile, tools
+from conans.errors import ConanInvalidConfiguration
 
 
 class GitSemVer(object):
