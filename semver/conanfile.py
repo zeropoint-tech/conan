@@ -245,13 +245,15 @@ def git_get_semver_multi(
         '0.0.0'
         >>> git_get_semver("B")
         '0.1.3'
+
+        C is tagged with `base/module/0.2`, but it should not be considered a 0.2 version
         >>> git_get_semver("C")
-        '0.2.0-0-g0e7e30bc68'
+        '0.1.4-1-g0e7e30bc68'
 
         D is a merge where both ancestors are TAGGED, use the larger SemVer
         and proceed as PARENT-TAGGED
         >>> git_get_semver("D")
-        '0.3.0-0-gced7ff8494'
+        '0.2.2-1-gced7ff8494'
 
         E and F are both on the "release/module/0.2" branch and are interpreted
         as RELEASE-BRANCH.
@@ -344,14 +346,16 @@ def git_get_semver_multi(
         return git.run(f"describe --tags --abbrev=0 --always --match {name}/\\* {ref}")
 
     def rev_parse(ref):
-        log.debug(f"rev_parse {ref[:10]}")
+        result = None
         try:
-            return git.run(f"rev-parse --verify {ref}")
+            result = git.run(f"rev-parse --verify {ref}")
         except:
             try:
-                return git.run(f"rev-parse --verify origin/{ref}")
+                result = git.run(f"rev-parse --verify origin/{ref}")
             except:
-                return None
+                result = None
+        log.debug(f"rev-parse {ref}={result}")
+        return result
 
     # Find nearest tag ancestor
     prev_tag = get_nearest_tag(name, ref)
@@ -363,7 +367,7 @@ def git_get_semver_multi(
 
     tag_ref = rev_parse(prev_tag)
 
-    log.debug(f"{prev_tag} {tag_version} {tag_ref[:10]}")
+    log.debug(f"{prev_tag=} tag_version={str(tag_version)} {tag_ref=}")
 
     # Find root of release branch, if any
     base_version = None
@@ -376,11 +380,15 @@ def git_get_semver_multi(
     ).split()
 
     def is_ancestor(fp):
-        log.debug(f"is_ancestor {fp} {ref}")
+        if ref == rev_parse(fp):
+            log.debug(f"is_ancestor {fp} and {ref} are the same")
+            return False
         try:
             git.run(f"merge-base --is-ancestor {fp} {ref}")
+            log.debug(f"is_ancestor {fp} is an ancestor of {ref}")
             return True
         except:
+            log.debug(f"is_ancestor {fp} is not an ancestor of {ref}")
             return False
 
     def get_release_base(branch):
@@ -399,9 +407,9 @@ def git_get_semver_multi(
                     return (tag_candidate, VersionRep(version), commits_behind)
         return None
 
-    log.debug(f"release_branches={release_branches}")
+    log.debug(f"{release_branches=}")
     release_base_tags = list(filter(None, map(get_release_base, release_branches)))
-    log.debug(f"release_base_tags={release_base_tags}")
+    log.debug(f"{release_base_tags=}")
     base_candidate = None
     base_version = None
     commits_behind_branch = None
@@ -413,10 +421,10 @@ def git_get_semver_multi(
         commits_behind = min(commits_behind, commits_behind_branch)
 
     log.debug(
-        f"{base_candidate} {commits_behind_tag} {commits_behind_branch} {commits_behind}"
+        f"{base_candidate=} {commits_behind_tag=} {commits_behind_branch=} {commits_behind=}"
     )
 
-    log.debug(f"tag_version {tag_version} base_version {base_version}")
+    log.debug(f"tag_version={tag_version} base_version={base_version}")
 
     if base_version and tag_version < base_version:
         version = base_version
