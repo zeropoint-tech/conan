@@ -25,7 +25,7 @@ pipeline {
           captureEnv: true,
         )
         sh "git log --graph --decorate --oneline --all"
-        sh "python3 semver/conanfile.py 2>&1"
+        sh "SEMVER_LOGLEVEL=DEBUG python3 semver/conanfile.py 2>&1"
         rtConanRun(
           clientId: "myConanClient",
           command: "create semver"

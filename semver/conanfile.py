@@ -35,6 +35,17 @@ import sys
 from conans import ConanFile, tools
 from conans.errors import ConanInvalidConfiguration
 
+# Create a module-wide logger
+log = logging.getLogger("conan.semver")
+log.setLevel(os.getenv("SEMVER_LOGLEVEL", "WARNING").upper())
+
+formatter = logging.Formatter(fmt="{levelname:5}:{name}: {message}", style="{")
+
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+
+log.addHandler(handler)
+
 
 class GitSemVer(object):
     """
@@ -300,8 +311,6 @@ def git_get_semver_multi(
         '0.2.3-2-gcb329aff46'
     """
 
-    log = logging.getLogger("semver")
-
     # Run all git commands from the root of the repo
     git = tools.Git()
     git = tools.Git(folder=git.get_repo_root())
@@ -438,21 +447,21 @@ class Pkg(ConanFile):
         self.info.header_only()
 
     def set_version(self):
-        if self.version != None:
-            return
-
-        logging.basicConfig(level=logging.DEBUG)
-        self.version = git_get_semver_multi(
+        calculatedVersion = git_get_semver_multi(
             name=self.name, watch_folders=[self.recipe_folder]
         )
 
-    pass
+        if self.version != None:
+            log.debug(f"Using pre-set version {self.version}")
+            return
+
+        log.debug(f"Setting version {self.version}")
+        self.version = calculatedVersion
 
 
 if __name__ == "__main__":
     import doctest
 
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
     (failed, all) = doctest.testmod(verbose=True)
     if failed > 0:
         exit(1)
