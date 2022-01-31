@@ -367,7 +367,7 @@ def git_get_semver_multi(
 
     tag_ref = rev_parse(prev_tag)
 
-    log.debug(f"{prev_tag=} tag_version={str(tag_version)} {tag_ref=}")
+    log.debug(f"prev_tag={prev_tag} tag_version={str(tag_version)} tag_ref={tag_ref}")
 
     # Find root of release branch, if any
     base_version = None
@@ -407,9 +407,9 @@ def git_get_semver_multi(
                     return (tag_candidate, VersionRep(version), commits_behind)
         return None
 
-    log.debug(f"{release_branches=}")
+    log.debug(f"release_branches={release_branches}")
     release_base_tags = list(filter(None, map(get_release_base, release_branches)))
-    log.debug(f"{release_base_tags=}")
+    log.debug(f"release_base_tags={release_base_tags}")
     base_candidate = None
     base_version = None
     commits_behind_branch = None
@@ -421,7 +421,7 @@ def git_get_semver_multi(
         commits_behind = min(commits_behind, commits_behind_branch)
 
     log.debug(
-        f"{base_candidate=} {commits_behind_tag=} {commits_behind_branch=} {commits_behind=}"
+        f"base_candidate={base_candidate} commits_behind_tag={commits_behind_tag} commits_behind_branch={commits_behind_branch} commits_behind={commits_behind}"
     )
 
     log.debug(f"tag_version={tag_version} base_version={base_version}")
