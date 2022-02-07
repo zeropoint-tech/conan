@@ -1,0 +1,2 @@
+conan https://zptcorp.jfrog.io/artifactory/api/conan/conan True
+conancenter https://center.conan.io True

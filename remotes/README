@@ -1,0 +1,17 @@
+This directory contains remote repository configurations for different use cases.
+
+Most users should use the base configuration
+
+Install a configuraton with
+
+> conan config install -sf remotes/base git@bitbucket.org:zpt/conan.git
+
+Replace base with a different config if neccessary
+
+Configurations
+==============
+
+base		suitable for most developers. Contains only the Artifactory virtual repository
+artie		base + the local Artifactory instance, artie
+center	base + the Conan Center repository
+
