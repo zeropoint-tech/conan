@@ -200,7 +200,7 @@ def git_get_semver_multi(
     """
     Calculate the Semantic Version based on git tags and brances.
 
-    It the environment variable TAG_NAME is set and the value has `name` as
+    If the environment variable TAG_NAME is set and the value has `name` as
     a prefix, use the version from TAG_NAME.
 
     The following cases exist:
@@ -362,12 +362,7 @@ def git_get_semver_multi(
 
     # Find nearest tag ancestor or provided tag name
     prev_tag = os.getenv("TAG_NAME", None)
-    if prev_tag:
-        if not prev_tag.startswith(name):
-            raise ConanInvalidConfiguration(
-                f"TAG_NAME='{prev_tag}' must start with '{name}'"
-            )
-    else:
+    if not prev_tag or not prev_tag.startswith(name):
         prev_tag = get_nearest_tag(name, ref)
 
     tag_version = get_version_from_string(prev_tag, name=name)
