@@ -8,10 +8,10 @@ os=Linux
 petalinux=True
 
 [env]
-CC=aarch64-none-elf-gcc
-CXX=aarch64-none-elf-c++
-LD=aarch64-none-elf-ld
-AR=aarch64-none-elf-ar
-AS=aarch64-none-elf-as
+CC=aarch64-none-elf-gcc-10
+CXX=aarch64-none-elf-c++10
+LD=aarch64-none-elf-ld-10
+AR=aarch64-none-elf-ar-10
+AS=aarch64-none-elf-as-10
 ARCH=arm64
 CROSS_COMPILE=aarch64-none-elf-

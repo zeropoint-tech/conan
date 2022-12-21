@@ -1,0 +1,14 @@
+[settings]
+arch=x86_64
+os=Linux
+compiler=gcc
+compiler.version=9
+compiler.libcxx=libstdc++11
+
+[env]
+CC=x86_64-linux-gnu-gcc-9
+CXX=x86_64-linux-gnu-g++-9
+LD=x86_64-linux-gnu-ld-9
+AR=x86_64-linux-gnu-ar-9
+RANLIB=x86_64-linux-gnu-ranlib-9
+STRIP=x86_64-linux-gnu-strip-9

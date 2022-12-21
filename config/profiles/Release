@@ -1,1 +1,4 @@
-default
+include(defalt)
+
+[settings]
+build_type=Release
