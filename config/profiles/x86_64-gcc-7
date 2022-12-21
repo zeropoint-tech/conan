@@ -1,0 +1,15 @@
+[settings]
+arch=x86_64
+os=Linux
+compiler=gcc
+compiler.version=7
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[env]
+CC=x86_64-linux-gnu-gcc-7
+CXX=x86_64-linux-gnu-g++-7
+LD=x86_64-linux-gnu-ld-7
+AR=x86_64-linux-gnu-ar
+RANLIB=x86_64-linux-gnu-ranlib
+STRIP=x86_64-linux-gnu-strip
