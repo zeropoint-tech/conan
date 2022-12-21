@@ -4,11 +4,12 @@ compiler=gcc
 compiler.version=10
 os=Linux
 build_type=Release
+petalinux:build_type=None
 
 [options]
 petalinux=True
 
-[env]
+[buildenv]
 CC=aarch64-none-elf-gcc-10
 CXX=aarch64-none-elf-c++10
 LD=aarch64-none-elf-ld-10
