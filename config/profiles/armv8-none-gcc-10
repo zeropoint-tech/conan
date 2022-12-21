@@ -4,10 +4,6 @@ compiler=gcc
 compiler.version=10
 os=Linux
 build_type=Release
-petalinux:build_type=None
-
-[options]
-petalinux=True
 
 [buildenv]
 CC=aarch64-none-elf-gcc-10
