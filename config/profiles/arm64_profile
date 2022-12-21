@@ -1,7 +1,6 @@
 include(armv8-gcc-9)
 
 [settings]
-build_type=Debug
 compiler.libcxx=libstdc++
 
 [buildenv]
