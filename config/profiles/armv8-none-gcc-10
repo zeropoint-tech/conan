@@ -13,3 +13,6 @@ AR=aarch64-none-elf-ar
 AS=aarch64-none-elf-as
 ARCH=arm64
 CROSS_COMPILE=aarch64-none-elf-
+
+[conf]
+tools.env.virtualenv:auto_use=True
