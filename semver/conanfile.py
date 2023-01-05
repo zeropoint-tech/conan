@@ -32,7 +32,8 @@ import re
 import os
 import glob
 import sys
-from conans import ConanFile, tools
+from conan import ConanFile
+from conan.tools.scm import Git
 from conans.errors import ConanInvalidConfiguration
 
 # Create a module-wide logger
@@ -62,7 +63,7 @@ class GitSemVer(object):
             return
 
         self.version = git_get_semver_multi(
-            name=self.name, watch_folders=[self.recipe_folder]
+            self, name=self.name, watch_folders=[self.recipe_folder]
         )
 
 
@@ -187,15 +188,19 @@ def get_version_from_string(string, name="module"):
 
 
 def git_get_semver(
-    ref_name="HEAD", name="module", master="origin/HEAD", recipe_folder=None
+    conanfile, ref_name="HEAD", name="module", master="origin/HEAD", recipe_folder=None
 ):
     return git_get_semver_multi(
-        ref_name, name, master, watch_folders=[recipe_folder] if recipe_folder else []
+        conanfile,
+        ref_name,
+        name,
+        master,
+        watch_folders=[recipe_folder] if recipe_folder else [],
     )
 
 
 def git_get_semver_multi(
-    ref_name="HEAD", name="module", master="origin/HEAD", watch_folders=[]
+    conanfile, ref_name="HEAD", name="module", master="origin/HEAD", watch_folders=[]
 ):
     """
     Calculate the Semantic Version based on git tags and brances.
@@ -244,81 +249,80 @@ def git_get_semver_multi(
                                       L---M---N----Q---R                 feat/amazing
 
         Here A is UNTAGGED, B is TAGGED and C is PARENT-TAGGED
-        >>> git_get_semver("A")
+        >>> git_get_semver(None, "A")
         '0.0.0'
-        >>> git_get_semver("B")
+        >>> git_get_semver(None, "B")
         '0.1.3'
 
         C is tagged with `base/module/0.2`, but it should not be considered a 0.2 version
-        >>> git_get_semver("C")
+        >>> git_get_semver(None, "C")
         '0.1.4-1-g0e7e30bc68'
 
         D is a merge where both ancestors are TAGGED, use the larger SemVer
         and proceed as PARENT-TAGGED
-        >>> git_get_semver("D")
+        >>> git_get_semver(None, "D")
         '0.2.2-1-gced7ff8494'
 
         E and F are both on the "release/module/0.2" branch and are interpreted
         as RELEASE-BRANCH.
         G is TAGGED and H is RELEASE-BRANCH-TAGGED.
-        >>> git_get_semver("E", master="test")
+        >>> git_get_semver(None, "E", master="test")
         '0.2.0-1-g8213582ebb'
-        >>> git_get_semver("F", master="test")
+        >>> git_get_semver(None, "F", master="test")
         '0.2.0-2-g8c990ed70f'
-        >>> git_get_semver("G", recipe_folder="test")
+        >>> git_get_semver(None, "G", recipe_folder="test")
         '0.2.1'
-        >>> git_get_semver("H")
+        >>> git_get_semver(None, "H")
         '0.2.2-1-g25c7e7e593'
 
         I is on the "dev" branch and PARENT-TAGGED from B
-        >>> git_get_semver("I")
+        >>> git_get_semver(None, "I")
         '0.1.4-2-gb4c695c5bb'
 
         J is a merge of the release branch into "dev", since there is no tag
         ancestor in the release branch, J is PARENT-TAGGED from B.
         The number of commits is calculated as count(J, I, E, C)
         K, L, M, and N follows J
-        >>> git_get_semver("J")
+        >>> git_get_semver(None, "J")
         '0.1.4-4-g2302af49d9'
-        >>> git_get_semver("K")
+        >>> git_get_semver(None, "K")
         '0.1.4-5-gf749b08edc'
-        >>> git_get_semver("L")
+        >>> git_get_semver(None, "L")
         '0.1.4-5-g3dba32efbb'
-        >>> git_get_semver("M")
+        >>> git_get_semver(None, "M")
         '0.1.4-6-g7e9ced54a9'
-        >>> git_get_semver("N")
+        >>> git_get_semver(None, "N")
         '0.1.4-7-gae88aaf43a'
 
         O is a merge of the release branch into "dev". In this case there
         is a tagged ancestor in the release branch, so O is PARENT-TAGGED from G
 
         The number of commits is calculated as count(O, K, J, I, C)
-        >>> git_get_semver("O")
+        >>> git_get_semver(None, "O")
         '0.2.2-4-gb978aaf2a6'
 
-        >>> git_get_semver("P")
+        >>> git_get_semver(None, "P")
         '0.2.2-5-g5d7a03e5ca'
 
         Q is a merge of the "dev" branch into "feat/amazing". It inherits the
         tagged ancestor and is PARENT-TAGGED from G.
         The number of commits is calculated as count(Q, N, M, L, O, K, J, I, C)
-        >>> git_get_semver("Q")
+        >>> git_get_semver(None, "Q")
         '0.2.2-8-g7281b66edf'
-        >>> git_get_semver("R")
+        >>> git_get_semver(None, "R")
         '0.2.2-9-g050e3f48dd'
 
         U is the only commit on the release/1.0 branch
-        >>> git_get_semver("U", master="test")
+        >>> git_get_semver(None, "U", master="test")
         '1.0.0-1-g1087af76ab'
 
         V is a merge of dev into release/0.2
-        >>> git_get_semver("V", master="test")
+        >>> git_get_semver(None, "V", master="test")
         '0.2.3-2-gcb329aff46'
     """
 
     # Run all git commands from the root of the repo
-    git = tools.Git()
-    git = tools.Git(folder=git.get_repo_root())
+    git = Git(conanfile)
 
     if "true" == git.run("rev-parse --is-shallow-repository"):
         raise ConanInvalidConfiguration(
@@ -456,13 +460,14 @@ class Pkg(ConanFile):
     url = "git@bitbucket.org:zpt/conan.git"
     description = "Semantic Versions derived from Git tags and branches"
     no_copy_source = True
+    package_type = "python-require"
 
     def package_id(self):
         self.info.header_only()
 
     def set_version(self):
         calculatedVersion = git_get_semver_multi(
-            name=self.name, watch_folders=[self.recipe_folder]
+            self, name=self.name, watch_folders=[self.recipe_folder]
         )
 
         if self.version != None:
