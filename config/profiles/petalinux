@@ -12,7 +12,7 @@ petalinux=True
 [buildenv]
 CC=aarch64-none-elf-gcc-10
 CXX=aarch64-none-elf-c++10
-LD=aarch64-none-elf-ld-10
+LD=aarch64-none-elf-ld
 AR=aarch64-none-elf-ar
 AS=aarch64-none-elf-as
 ARCH=arm64

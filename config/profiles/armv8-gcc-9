@@ -9,7 +9,7 @@ build_type=Release
 [buildenv]
 CC=aarch64-linux-gnu-gcc-9
 CXX=aarch64-linux-gnu-g++-9
-LD=aarch64-linux-gnu-ld-9
+LD=aarch64-linux-gnu-ld
 AR=aarch64-linux-gnu-ar
 RANLIB=aarch64-linux-gnu-ranlib
 STRIP=aarch64-linux-gnu-strip
