@@ -10,8 +10,8 @@ petalinux:build_type=None
 petalinux=True
 
 [buildenv]
-CC=aarch64-none-elf-gcc-10
-CXX=aarch64-none-elf-c++10
+CC=aarch64-none-elf-gcc
+CXX=aarch64-none-elf-c++
 LD=aarch64-none-elf-ld
 AR=aarch64-none-elf-ar
 AS=aarch64-none-elf-as
