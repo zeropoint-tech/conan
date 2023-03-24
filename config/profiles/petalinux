@@ -7,7 +7,7 @@ build_type=Release
 petalinux:build_type=None
 
 [options]
-petalinux=True
+*:petalinux=True
 
 [buildenv]
 CC=aarch64-none-elf-gcc
