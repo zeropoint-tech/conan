@@ -12,6 +12,7 @@ build_type=Release
 android-ndk/r25c
 
 [options]
+*:andriod=True
 
 [env]
 
