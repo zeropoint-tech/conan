@@ -14,5 +14,3 @@ AR=x86_64-linux-gnu-ar
 RANLIB=x86_64-linux-gnu-ranlib
 STRIP=x86_64-linux-gnu-strip
 
-[conf]
-tools.env.virtualenv:auto_use=True
