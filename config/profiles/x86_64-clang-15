@@ -23,3 +23,5 @@ STRIP=llvm-strip-$version
 
 [env]
 
+[conf]
+tools.env.virtualenv:auto_use=True
