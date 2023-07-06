@@ -1,2 +1,2 @@
-artie http://artie.zptcorp.com:8081/artifactory/api/conan/conan True
+artie http://artie.zptcorp.com:8081/artifactory/api/conan/conan False
 conan https://zptcorp.jfrog.io/artifactory/api/conan/conan True
