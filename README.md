@@ -4,7 +4,7 @@ This repository contains configurations, helpers and extensions for the Conan pa
 
 ### What is this repository for? ###
 
-eet  Quick summary
+* Quick summary
 * Version
 * [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
