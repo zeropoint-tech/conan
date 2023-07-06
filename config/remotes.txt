@@ -1,1 +1,1 @@
-../remotes/base/remotes.txt
+../remotes/artie/remotes.txt
