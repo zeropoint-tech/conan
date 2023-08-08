@@ -1,0 +1,16 @@
+{
+ "remotes": [
+  {
+   "name": "conan",
+   "url": "https://zptcorp.jfrog.io/artifactory/api/conan/conan",
+   "verify_ssl": true
+  },
+  {
+   "name": "artie",
+   "url": "http://artie.zptcorp.com:8081/artifactory/api/conan/conan",
+   "verify_ssl": false
+  }
+
+ ]
+}
+

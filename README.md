@@ -14,8 +14,15 @@ This repository contains configurations, helpers and extensions for the Conan pa
 
 ```pip install --upgrade conan```
 
-* Summary of set up
-* Configuration
+#### To configure  ZeroPoint company wide conan configuration
+
+```conan config install -sf config git@bitbucket.org:zpt/conan.git```
+
+#### To configure Artie remote (Only for local usage is case you need)
+
+```conan config install -sf remotes/artie  git@bitbucket.org:zpt/conan.git```
+
+
 * Dependencies
 * Database configuration
 * How to run tests
