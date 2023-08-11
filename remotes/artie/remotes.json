@@ -7,8 +7,8 @@
   },
   {
    "name": "artie",
-   "url": "http://artie.zptcorp.com:8081/artifactory/api/conan/conan",
-   "verify_ssl": false
+   "url": "https://artie.zptcorp.com/artifactory/api/conan/conan",
+   "verify_ssl": true
   }
 
  ]
