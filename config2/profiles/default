@@ -1,0 +1,4 @@
+include(x86_64-gcc-9)
+
+[settings]
+build_type=Release

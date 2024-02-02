@@ -1,0 +1,8 @@
+include(armv8-gcc-9)
+
+[settings]
+compiler.libcxx=libstdc++
+build_type=Release
+
+[buildenv]
+ctm-userspace:CONAN_RUN_TESTS=False
