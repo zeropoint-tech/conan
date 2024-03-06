@@ -2,7 +2,7 @@
 arch=armv8
 compiler=gcc
 compiler.version=10
-compiler.libcxx=libstdc++11
+compiler.libcxx=libstdc++
 os=Linux
 build_type=Release
 petalinux:build_type=None
