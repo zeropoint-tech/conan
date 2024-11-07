@@ -34,7 +34,7 @@ import glob
 import sys
 from conan import ConanFile
 from conan.tools.scm import Git
-from conans.errors import ConanInvalidConfiguration
+from conan.errors import ConanInvalidConfiguration
 
 # Create a module-wide logger
 log = logging.getLogger("conan.semver")
