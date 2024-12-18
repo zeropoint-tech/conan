@@ -232,3 +232,22 @@ def test_powershell_deprecated_message(powershell):
         assert "Boolean values for 'tools.env.virtualenv:powershell' are deprecated" in client.out
     else:
         assert "Boolean values for 'tools.env.virtualenv:powershell' are deprecated" not in client.out
+
+
+@pytest.mark.skipif(platform.system() != "Windows", reason="Test for powershell")
+@pytest.mark.parametrize("powershell", [True, "pwsh", "powershell.exe"])
+def test_powershell_quoting(powershell):
+    client = TestClient(path_with_spaces=False)
+    conanfile = textwrap.dedent("""\
+        from conan import ConanFile
+        class Pkg(ConanFile):
+            settings = "os"
+            name = "pkg"
+            version = "0.1"
+            def build(self):
+                self.run('python -c "print(\\'Hello World\\')"', scope="build")
+        """)
+
+    client.save({"conanfile.py": conanfile})
+    client.run(f'create . -c tools.env.virtualenv:powershell={powershell}')
+    assert "Hello World" in client.out
