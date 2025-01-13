@@ -2,6 +2,7 @@
 arch=armv8
 compiler=gcc
 compiler.version=10
+compiler.cppstd=17
 os=Linux
 build_type=Release
 
