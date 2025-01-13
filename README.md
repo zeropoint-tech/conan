@@ -16,7 +16,13 @@ This repository contains configurations, helpers and extensions for the Conan pa
 
 #### To configure  ZeroPoint company wide conan configuration
 
+For conan 1:
+
 ```conan config install -sf config git@bitbucket.org:zpt/conan.git```
+
+For conan 2:
+
+```conan config install -sf config2 git@bitbucket.org:zpt/conan.git```
 
 #### To configure Artie remote (Only for local usage is case you need)
 
