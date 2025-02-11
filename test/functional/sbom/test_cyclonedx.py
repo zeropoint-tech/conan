@@ -138,7 +138,7 @@ from conan.api.output import ConanOutput
 from conan.tools.sbom import cyclonedx_1_4
 
 def post_generate(conanfile):
-    sbom_cyclonedx_1_4 = cyclonedx_1_4(conanfile.subgraph)
+    sbom_cyclonedx_1_4 = cyclonedx_1_4(conanfile.subgraph, name=%s)
     generators_folder = conanfile.generators_folder
     file_name = "sbom.cdx.json"
     os.mkdir(os.path.join(generators_folder, "sbom"))
@@ -151,7 +151,7 @@ def post_generate(conanfile):
 def hook_setup_post_generate():
     tc = TestClient()
     hook_path = os.path.join(tc.paths.hooks_path, "hook_sbom.py")
-    save(hook_path, sbom_hook_post_generate)
+    save(hook_path, sbom_hook_post_generate % "None")
     return tc
 
 def test_sbom_generation_install_requires(hook_setup_post_generate):
@@ -199,3 +199,17 @@ def test_sbom_generation_install_path_txt(hook_setup_post_generate):
     #foo -> dep
     tc.run("install .")
     assert os.path.exists(os.path.join(tc.current_folder, "sbom", "sbom.cdx.json"))
+
+@pytest.mark.parametrize("name, result", [
+    ("None", "conan-sbom"),
+    ('"custom-name"', "custom-name")
+])
+def test_sbom_generation_custom_name(name, result):
+    tc = TestClient()
+    hook_path = os.path.join(tc.paths.hooks_path, "hook_sbom.py")
+    save(hook_path, sbom_hook_post_generate % name)
+
+    tc.save({"conanfile.py": GenConanfile()})
+    tc.run("install .")
+    assert os.path.exists(os.path.join(tc.current_folder, "sbom", "sbom.cdx.json"))
+    assert f'"name": "{result}"' in tc.load(os.path.join(tc.current_folder, "sbom", "sbom.cdx.json"))
