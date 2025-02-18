@@ -1,5 +1,6 @@
 import gzip
 import os
+import stat
 import platform
 import shutil
 import subprocess
@@ -261,6 +262,43 @@ def chdir(conanfile, newdir):
         yield
     finally:
         os.chdir(old_path)
+
+
+def chmod(conanfile, path:str, read:bool, write:bool, execute:bool, recursive:bool=False):
+    """
+    Change the permissions of a file or directory. The same as the Unix command chmod, but simplified.
+
+    :param conanfile: The current recipe object. Always use ``self``.
+    :param path: Path to the file or directory to change the permissions.
+    :param read: If ``True``, the file or directory will have read permissions for any user.
+    :param write: If ``True``, the file or directory will have write permissions for any user.
+    :param execute: If ``True``, the file or directory will have execute permissions for any user.
+    :param recursive: (Optional, Defaulted to ``False``) If ``True``, the permissions will be applied
+    """
+    if not os.path.exists(path):
+        raise ConanException(f"Could not change permission: Path \"{path}\" does not exist.")
+
+    def _change_permission(it_path:str):
+        mode = os.stat(it_path).st_mode
+        permission_map = {
+            read: stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH,
+            write: stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH,
+            execute: stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
+        }
+        for enabled, mask in permission_map.items():
+            if enabled:
+                mode |= mask
+            else:
+                mode &= ~mask
+        os.chmod(it_path, mode)
+
+    if recursive:
+        for root, _, files in os.walk(path):
+            _change_permission(root)
+            for file in files:
+                _change_permission(os.path.join(root, file))
+    else:
+        _change_permission(path)
 
 
 def unzip(conanfile, filename, destination=".", keep_permissions=False, pattern=None,
