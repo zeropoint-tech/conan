@@ -267,7 +267,7 @@ def chdir(conanfile, newdir):
 def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=None, recursive:bool=False):
     """
     Change the permissions of a file or directory. The same as the Unix command chmod, but simplified.
-    It skips in case running on Windows.
+    On Windows is limited to changing write permission only.
 
     :param conanfile: The current recipe object. Always use ``self``.
     :param path: Path to the file or directory to change the permissions.
