@@ -287,7 +287,7 @@ def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=Non
         permissions = [
             (read, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH),
             (write, stat.S_IWUSR),
-            (execute, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH & ~stat.S_ISUID & ~stat.S_ISGID)
+            (execute, stat.S_IXUSR | stat.S_IXGRP)
         ]
         for enabled, mask in permissions:
             if enabled is None:
