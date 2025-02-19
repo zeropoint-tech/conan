@@ -8,17 +8,16 @@ import shutil
 import socket
 import sys
 import textwrap
-import threading
-import time
 import traceback
 import uuid
 import zipfile
 from collections import OrderedDict
 from contextlib import contextmanager
+from inspect import getframeinfo, stack
 from urllib.parse import urlsplit, urlunsplit
 
-import bottle
 import mock
+import pytest
 import requests
 from mock import Mock
 from requests.exceptions import HTTPError
@@ -35,11 +34,8 @@ from conan.api.model import Remote
 from conan.cli.cli import Cli, _CONAN_INTERNAL_CUSTOM_COMMANDS_PATH
 from conan.test.utils.env import environment_update
 from conan.internal.errors import NotFoundException
-from conan.internal.model.manifest import FileTreeManifest
 from conan.api.model import PkgReference
-from conan.internal.model.profile import Profile
 from conan.api.model import RecipeReference
-from conan.internal.model.settings import Settings
 from conan.test.assets.genconanfile import GenConanfile
 from conan.test.utils.artifactory import ArtifactoryServer
 from conan.test.utils.mocks import RedirectedInputStream
@@ -82,28 +78,6 @@ default_profiles = {
         build_type=Release
         """)
 }
-
-def inc_recipe_manifest_timestamp(cache, reference, inc_time):
-    ref = RecipeReference.loads(reference)
-    path = cache.get_latest_recipe_reference(ref).export()
-    manifest = FileTreeManifest.load(path)
-    manifest.time += inc_time
-    manifest.save(path)
-
-
-def inc_package_manifest_timestamp(cache, package_reference, inc_time):
-    path = cache.get_latest_package_reference(package_reference).package()
-    manifest = FileTreeManifest.load(path)
-    manifest.time += inc_time
-    manifest.save(path)
-
-
-def create_profile(profile=None, settings=None):
-    if profile is None:
-        profile = Profile()
-    if profile.processed_settings is None:
-        profile.processed_settings = settings or Settings()
-    return profile
 
 
 class TestingResponse(object):
@@ -629,15 +603,15 @@ class TestClient:
                 msg = " Command succeeded (failure expected): "
             else:
                 msg = " Command failed (unexpectedly): "
-            exc_message = "\n{header}\n{cmd}\n{output_header}\n{output}\n".format(
-                header='{:=^80}'.format(msg),
-                output_header='{:=^80}'.format(" Output: "),
-                cmd=command,
-                output=str(self.stderr) + str(self.stdout) + "\n" + str(self.out)
-            )
+
+            output = str(self.stderr) + str(self.stdout) + "\n"
+            exc_message = f"\n{msg:=^80}\n{command}\n{' Output: ':=^80}\n{output}\n"
             if trace:
-                exc_message += '{:=^80}'.format(" Traceback: ") + f"\n{trace}"
-            raise Exception(exc_message)
+                exc_message += f'{" Traceback: ":=^80}\n{trace}'
+
+            caller = getframeinfo(stack()[3][0])
+            exc_message = f"{caller.filename}:{caller.lineno}" + exc_message
+            pytest.fail(exc_message, pytrace=False)
 
     def save(self, files, path=None, clean_first=False):
         """ helper metod, will store files in the current folder
@@ -851,28 +825,6 @@ def get_free_port():
     ret = sock.getsockname()[1]
     sock.close()
     return ret
-
-
-class StoppableThreadBottle(threading.Thread):
-    """
-    Real server to test download endpoints
-    """
-
-    def __init__(self, host=None, port=None):
-        self.host = host or "127.0.0.1"
-        self.server = bottle.Bottle()
-        self.port = port or get_free_port()
-        super(StoppableThreadBottle, self).__init__(target=self.server.run,
-                                                    kwargs={"host": self.host, "port": self.port})
-        self.daemon = True
-        self._stop = threading.Event()
-
-    def stop(self):
-        self._stop.set()
-
-    def run_server(self):
-        self.start()
-        time.sleep(1)
 
 
 def zipdir(path, zipfilename):
