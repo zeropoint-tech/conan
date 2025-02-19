@@ -276,6 +276,9 @@ def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=Non
     :param execute: If ``True``, the file or directory will have execute permissions for any user.
     :param recursive: If ``True``, the permissions will be applied
     """
+    if read is None and write is None and execute is None:
+        raise ConanException("Could not change permission: At least one of the permissions should be set.")
+
     if not os.path.exists(path):
         raise ConanException(f"Could not change permission: Path \"{path}\" does not exist.")
 

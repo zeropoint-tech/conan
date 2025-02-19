@@ -20,9 +20,7 @@ from conan.test.utils.tools import temp_folder, save_files
     (False, False, False, 0o000),])
 def test_chmod_single_file(read, write, execute, expected):
     """
-    This test is to validate the function chmod.
-
-    The function should change the file permissions to the expected value only.
+    The chmod should be able to change the permissions of a single file.
     """
     tmp = temp_folder()
     save_files(tmp, {"file.txt": "foobar"})
@@ -45,9 +43,7 @@ def test_chmod_single_file(read, write, execute, expected):
     (False, False, False, 0o000),])
 def test_chmod_recursive(read, write, execute, expected):
     """
-    This test is to validate the function chmod.
-
-    The function should change the file permissions to the expected value only.
+    The chmod should be able to change the permissions of all files in a folder when recursive is set to True.
     """
     tmp = temp_folder()
     save_files(tmp, {"foobar/qux/file.txt": "foobar",
@@ -62,11 +58,34 @@ def test_chmod_recursive(read, write, execute, expected):
             assert stat.S_IMODE(file_mode) == expected
 
 
+@pytest.mark.skipif(platform.system() == "Windows", reason="Validate default permissions only in Unix")
+def test_chmod_default_values():
+    """
+    When not passing a permission parameter, chmod should not change the specific permission.
+    """
+    tmp = temp_folder()
+    save_files(tmp, {"file.txt": "foobar"})
+    file_path = os.path.join(tmp, "file.txt")
+    os.chmod(file_path, 0o111)
+    conanfile = ConanFileMock()
+    chmod(conanfile, file_path, read=True)
+    file_mode = os.stat(file_path).st_mode
+    assert stat.S_IMODE(file_mode) == 0o555
+
+
+def test_missing_permission_arguments():
+    """
+    The chmod should raise an exception if no new permission is provided.
+    """
+    conanfile = ConanFileMock()
+    with pytest.raises(ConanException) as error:
+        chmod(conanfile, "invalid_path")
+    assert 'Could not change permission: At least one of the permissions should be set.' in str(error.value)
+
+
 def test_invalid_path():
     """
-    This test is to validate the function chmod.
-
-    The function should raise an exception if the path does not exist.
+    The chmod should raise an exception if the path does not exist.
     """
     conanfile = ConanFileMock()
     with pytest.raises(ConanException) as error:
@@ -77,7 +96,7 @@ def test_invalid_path():
 @pytest.mark.skipif(platform.system() != "Windows", reason="Validate read-only permissions only in Windows")
 def test_chmod_windows():
     """
-    This test is to validate the function chmod in Windows.
+    The chmod should be able to change read-only state in Windows.
     """
     tmp = temp_folder()
     save_files(tmp, {"file.txt": "foobar"})
