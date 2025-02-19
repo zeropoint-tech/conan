@@ -264,7 +264,7 @@ def chdir(conanfile, newdir):
         os.chdir(old_path)
 
 
-def chmod(conanfile, path:str, read:bool, write:bool, execute:bool, recursive:bool=False):
+def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=None, recursive:bool=False):
     """
     Change the permissions of a file or directory. The same as the Unix command chmod, but simplified.
     It skips in case running on Windows.
@@ -272,14 +272,10 @@ def chmod(conanfile, path:str, read:bool, write:bool, execute:bool, recursive:bo
     :param conanfile: The current recipe object. Always use ``self``.
     :param path: Path to the file or directory to change the permissions.
     :param read: If ``True``, the file or directory will have read permissions for any user.
-    :param write: If ``True``, the file or directory will have write permissions for any user.
+    :param write: If ``True``, the file or directory will have write permissions for owner user.
     :param execute: If ``True``, the file or directory will have execute permissions for any user.
-    :param recursive: (Optional, Defaulted to ``False``) If ``True``, the permissions will be applied
+    :param recursive: If ``True``, the permissions will be applied
     """
-    if platform.system() == "Windows":
-        conanfile.output.debug("Skipping tools.files.chmod on Windows.")
-        return
-
     if not os.path.exists(path):
         raise ConanException(f"Could not change permission: Path \"{path}\" does not exist.")
 
@@ -287,11 +283,13 @@ def chmod(conanfile, path:str, read:bool, write:bool, execute:bool, recursive:bo
         mode = os.stat(it_path).st_mode
         permissions = [
             (read, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH),
-            (write, stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH),
+            (write, stat.S_IWUSR),
             (execute, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         ]
         for enabled, mask in permissions:
-            if enabled:
+            if enabled is None:
+                continue
+            elif enabled:
                 mode |= mask
             else:
                 mode &= ~mask
