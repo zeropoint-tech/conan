@@ -11,10 +11,10 @@ from conan.test.utils.tools import temp_folder, save_files
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="validate full permissions only in Unix")
 @pytest.mark.parametrize("read,write,execute,expected", [
-    (True, True, True, 0o754),
+    (True, True, True, 0o744),
     (False, True, False, 0o200),
-    (False, False, True, 0o110),
-    (True, False, True, 0o554),
+    (False, False, True, 0o100),
+    (True, False, True, 0o544),
     (True, True, False, 0o644),
     (True, False, False, 0o444),
     (False, False, False, 0o000),])
@@ -34,10 +34,10 @@ def test_chmod_single_file(read, write, execute, expected):
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="validate full permissions only in Unix")
 @pytest.mark.parametrize("read,write,execute,expected", [
-    (True, True, True, 0o754),
+    (True, True, True, 0o744),
     (False, True, False, 0o200),
-    (False, False, True, 0o110),
-    (True, False, True, 0o554),
+    (False, False, True, 0o100),
+    (True, False, True, 0o544),
     (True, True, False, 0o644),
     (True, False, False, 0o444),
     (False, False, False, 0o000),])
