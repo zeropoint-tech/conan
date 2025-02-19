@@ -11,12 +11,12 @@ from conan.test.utils.tools import temp_folder, save_files
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="validate full permissions only in Unix")
 @pytest.mark.parametrize("read,write,execute,expected", [
-    (True, True, True, 0o744),
+    (True, True, True, 0o700),
     (False, True, False, 0o200),
     (False, False, True, 0o100),
-    (True, False, True, 0o544),
-    (True, True, False, 0o644),
-    (True, False, False, 0o444),
+    (True, False, True, 0o500),
+    (True, True, False, 0o600),
+    (True, False, False, 0o400),
     (False, False, False, 0o000),])
 def test_chmod_single_file(read, write, execute, expected):
     """
@@ -34,28 +34,31 @@ def test_chmod_single_file(read, write, execute, expected):
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="validate full permissions only in Unix")
 @pytest.mark.parametrize("read,write,execute,expected", [
-    (True, True, True, 0o744),
+    (True, True, True, 0o700),
     (False, True, False, 0o200),
     (False, False, True, 0o100),
-    (True, False, True, 0o544),
-    (True, True, False, 0o644),
-    (True, False, False, 0o444),
+    (True, False, True, 0o500),
+    (True, True, False, 0o600),
+    (True, False, False, 0o400),
     (False, False, False, 0o000),])
 def test_chmod_recursive(read, write, execute, expected):
     """
     The chmod should be able to change the permissions of all files in a folder when recursive is set to True.
     """
     tmp = temp_folder()
-    save_files(tmp, {"foobar/qux/file.txt": "foobar",
-                          "foobar/file.txt": "qux",
-                          "foobar/foo/file.txt": "foobar"})
+    files = {"foobar/qux/file.txt": "foobar",
+             "foobar/file.txt": "qux",
+             "foobar/foo/file.txt": "foobar"}
+    save_files(tmp, files)
     folder_path = os.path.join(tmp, "foobar")
+    for file in files.keys():
+        file_path = os.path.join(tmp, file)
+        os.chmod(file_path, 0o000)
     conanfile = ConanFileMock()
     chmod(conanfile, folder_path, read=read, write=write, execute=execute, recursive=True)
-    for root, _, files in os.walk(folder_path):
-        for file in files:
-            file_mode = os.stat(os.path.join(root, file)).st_mode
-            assert stat.S_IMODE(file_mode) == expected
+    for file in files.keys():
+        file_mode = os.stat(os.path.join(tmp, file)).st_mode
+        assert stat.S_IMODE(file_mode) == expected
 
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="Validate default permissions only in Unix")
@@ -70,7 +73,7 @@ def test_chmod_default_values():
     conanfile = ConanFileMock()
     chmod(conanfile, file_path, read=True)
     file_mode = os.stat(file_path).st_mode
-    assert stat.S_IMODE(file_mode) == 0o555
+    assert stat.S_IMODE(file_mode) == 0o511
 
 
 def test_missing_permission_arguments():

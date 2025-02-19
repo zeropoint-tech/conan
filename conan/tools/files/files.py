@@ -271,7 +271,7 @@ def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=Non
 
     :param conanfile: The current recipe object. Always use ``self``.
     :param path: Path to the file or directory to change the permissions.
-    :param read: If ``True``, the file or directory will have read permissions for any user.
+    :param read: If ``True``, the file or directory will have read permissions for owner user.
     :param write: If ``True``, the file or directory will have write permissions for owner user.
     :param execute: If ``True``, the file or directory will have execute permissions for owner user.
     :param recursive: If ``True``, the permissions will be applied
@@ -285,7 +285,7 @@ def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=Non
     def _change_permission(it_path:str):
         mode = os.stat(it_path).st_mode
         permissions = [
-            (read, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH),
+            (read, stat.S_IRUSR),
             (write, stat.S_IWUSR),
             (execute, stat.S_IXUSR)
         ]
