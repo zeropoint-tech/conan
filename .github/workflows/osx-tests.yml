@@ -36,7 +36,7 @@ jobs:
           pip install meson
 
       - name: Uninstall default CMake
-        run: brew uninstall cmake || true
+        run: brew uninstall --formula cmake || true
 
       - name: Cache Homebrew packages
         id: cache-brew
