@@ -24,6 +24,9 @@ def post_export(conanfile):
 def pre_validate_build(conanfile):
     conanfile.output.info("Hello")
 
+def post_validate_build(conanfile):
+    conanfile.output.info("Hello")
+
 def pre_source(conanfile):
     conanfile.output.info("Hello")
     assert conanfile.source_folder, "source_folder not defined"
@@ -115,6 +118,7 @@ class TestHooks:
         assert f"pkg/0.1: {hook_msg} pre_package_info(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_package_info(): Hello" in c.out
         assert "pre_validate_build()" not in c.out
+        assert "post_validate_build()" not in c.out
 
     def test_import_hook(self):
         """ Test that a hook can import another random python file
@@ -198,3 +202,4 @@ class TestHooks:
 
         c.run("create . --name=foo --version=0.1.0")
         assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] pre_validate_build(): Hello" in c.out
+        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] post_validate_build(): Hello" in c.out

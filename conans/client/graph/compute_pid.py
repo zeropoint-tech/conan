@@ -71,6 +71,7 @@ def run_validate_package_id(conanfile, hook_manager):
                 except ConanInvalidConfiguration as e:
                     # This 'cant_build' will be ignored if we don't have to build the node.
                     conanfile.info.cant_build = str(e)
+            hook_manager.execute("post_validate_build", conanfile=conanfile)
 
     if hasattr(conanfile, "validate"):
         with conanfile_exception_formatter(conanfile, "validate"):
