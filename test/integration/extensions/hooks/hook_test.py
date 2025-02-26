@@ -1,5 +1,6 @@
 import os
 import textwrap
+import pytest
 
 from conan.test.assets.genconanfile import GenConanfile
 from conan.test.utils.tools import TestClient
@@ -184,9 +185,10 @@ class TestHooks:
         assert "conanfile.py: [HOOK - my_hook/hook_my_hook.py] post_build_fail(): Hello" in c.out
         assert "ERROR: conanfile.py: Error in build() method, line 5" in c.out
 
-    def test_validate_build_hook(self):
-        """ The validate_build hook is executed before the validate_build() method,
-            but only if it's declared in the recipe.
+    @pytest.mark.parametrize("method", ["validate_build", "validate"])
+    def test_validate_hook(self, method):
+        """ The validate_build and validate hooks are executed only if the method is declared
+            in the recipe.
         """
         c = TestClient()
         hook_path = os.path.join(c.paths.hooks_path, "testing", "hook_complete.py")
@@ -195,11 +197,11 @@ class TestHooks:
         conanfile = textwrap.dedent("""
             from conan import ConanFile
             class Pkg(ConanFile):
-                def validate_build(self):
+                def {method}(self):
                     pass
-            """)
+            """.format(method=method))
         c.save({"conanfile.py": conanfile})
 
         c.run("create . --name=foo --version=0.1.0")
-        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] pre_validate_build(): Hello" in c.out
-        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] post_validate_build(): Hello" in c.out
+        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] pre_{method}(): Hello" in c.out
+        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] post_{method}(): Hello" in c.out
