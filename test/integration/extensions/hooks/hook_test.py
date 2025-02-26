@@ -108,13 +108,13 @@ class TestHooks:
         assert f"pkg/0.1: {hook_msg} post_export(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_source(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_source(): Hello" in c.out
-        assert f"pkg/0.1: {hook_msg} pre_validate_build(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_build(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_build(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_package(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_package(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_package_info(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_package_info(): Hello" in c.out
+        assert "pre_validate_build()" not in c.out
 
     def test_import_hook(self):
         """ Test that a hook can import another random python file
@@ -180,3 +180,21 @@ class TestHooks:
         assert "conanfile.py: [HOOK - my_hook/hook_my_hook.py] post_build_fail(): Hello" in c.out
         assert "ERROR: conanfile.py: Error in build() method, line 5" in c.out
 
+    def test_validate_build_hook(self):
+        """ The validate_build hook is executed before the validate_build() method,
+            but only if it's declared in the recipe.
+        """
+        c = TestClient()
+        hook_path = os.path.join(c.paths.hooks_path, "testing", "hook_complete.py")
+        save(hook_path, complete_hook)
+
+        conanfile = textwrap.dedent("""
+            from conan import ConanFile
+            class Pkg(ConanFile):
+                def validate_build(self):
+                    pass
+            """)
+        c.save({"conanfile.py": conanfile})
+
+        c.run("create . --name=foo --version=0.1.0")
+        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] pre_validate_build(): Hello" in c.out

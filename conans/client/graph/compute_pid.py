@@ -6,7 +6,7 @@ from conan.internal.methods import auto_header_only_package_id
 from conan.internal.model.info import ConanInfo, RequirementsInfo, RequirementInfo, PythonRequiresInfo
 
 
-def compute_package_id(node, modes, config_version):
+def compute_package_id(node, modes, config_version, hook_manager):
     """
     Compute the binary package ID of this node
     """
@@ -50,7 +50,7 @@ def compute_package_id(node, modes, config_version):
                                config_version=config_version.copy() if config_version else None)
     conanfile.original_info = conanfile.info.clone()
 
-    run_validate_package_id(conanfile)
+    run_validate_package_id(conanfile, hook_manager)
 
     if conanfile.info.settings_target:
         # settings_target has beed added to conan package via package_id api
@@ -60,10 +60,11 @@ def compute_package_id(node, modes, config_version):
     node.package_id = info.package_id()
 
 
-def run_validate_package_id(conanfile):
+def run_validate_package_id(conanfile, hook_manager):
     # IMPORTANT: This validation code must run before calling info.package_id(), to mark "invalid"
     if hasattr(conanfile, "validate_build"):
         with conanfile_exception_formatter(conanfile, "validate_build"):
+            hook_manager.execute("pre_validate_build", conanfile=conanfile)
             with conanfile_remove_attr(conanfile, ['cpp_info'], "validate_build"):
                 try:
                     conanfile.validate_build()

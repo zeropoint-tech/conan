@@ -20,6 +20,7 @@ from conan.internal.model.info import RequirementInfo, RequirementsInfo
 from conan.api.model import PkgReference
 from conan.api.model import RecipeReference
 from conans.util.files import load
+from conans.client.hook_manager import HookManager
 
 
 class GraphBinariesAnalyzer:
@@ -40,6 +41,8 @@ class GraphBinariesAnalyzer:
         python_mode = global_conf.get("core.package_id:default_python_mode", default="minor_mode")
         build_mode = global_conf.get("core.package_id:default_build_mode", default=None)
         self._modes = unknown_mode, non_embed, embed_mode, python_mode, build_mode
+        self._hook_manager = HookManager(HomePaths(self._home_folder).hooks_path)
+
 
     @staticmethod
     def _evaluate_build(node, build_mode):
@@ -397,7 +400,8 @@ class GraphBinariesAnalyzer:
         return RequirementsInfo(result)
 
     def _evaluate_package_id(self, node, config_version):
-        compute_package_id(node, self._modes, config_version=config_version)
+        compute_package_id(node, self._modes, config_version=config_version,
+                           hook_manager=self._hook_manager)
 
         # TODO: layout() execution don't need to be evaluated at GraphBuilder time.
         # it could even be delayed until installation time, but if we got enough info here for
@@ -458,7 +462,8 @@ class GraphBinariesAnalyzer:
         if node.path is not None:
             if node.path.endswith(".py"):
                 # For .py we keep evaluating the package_id, validate(), etc
-                compute_package_id(node, self._modes, config_version=config_version)
+                compute_package_id(node, self._modes, config_version=config_version,
+                                   hook_manager=self._hook_manager)
             # To support the ``[layout]`` in conanfile.txt
             if hasattr(node.conanfile, "layout"):
                 with conanfile_exception_formatter(node.conanfile, "layout"):
