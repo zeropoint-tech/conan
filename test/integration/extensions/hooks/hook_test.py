@@ -28,6 +28,9 @@ def pre_validate_build(conanfile):
 def post_validate_build(conanfile):
     conanfile.output.info("Hello")
 
+def pre_validate(conanfile):
+    conanfile.output.info("Hello")
+
 def pre_source(conanfile):
     conanfile.output.info("Hello")
     assert conanfile.source_folder, "source_folder not defined"
