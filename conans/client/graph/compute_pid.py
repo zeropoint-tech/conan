@@ -81,6 +81,7 @@ def run_validate_package_id(conanfile, hook_manager):
                     conanfile.validate()
                 except ConanInvalidConfiguration as e:
                     conanfile.info.invalid = str(e)
+            hook_manager.execute("post_validate", conanfile=conanfile)
 
     # Once we are done, call package_id() to narrow and change possible values
     if hasattr(conanfile, "package_id"):
