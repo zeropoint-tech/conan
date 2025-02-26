@@ -21,6 +21,9 @@ def post_export(conanfile):
     assert conanfile.export_sources_folder, "export_sources_folder not defined"
     assert conanfile.recipe_folder, "recipe_folder not defined"
 
+def pre_validate_build(conanfile):
+    conanfile.output.info("Hello")
+
 def pre_source(conanfile):
     conanfile.output.info("Hello")
     assert conanfile.source_folder, "source_folder not defined"
@@ -105,6 +108,7 @@ class TestHooks:
         assert f"pkg/0.1: {hook_msg} post_export(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_source(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_source(): Hello" in c.out
+        assert f"pkg/0.1: {hook_msg} pre_validate_build(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_build(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_build(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_package(): Hello" in c.out
