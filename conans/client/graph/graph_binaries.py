@@ -29,10 +29,11 @@ class GraphBinariesAnalyzer:
         self._home_folder = conan_app.cache_folder
         self._global_conf = global_conf
         self._remote_manager = conan_app.remote_manager
+        self._hook_manager = conan_app.conan_api.config.hook_manager
         # These are the nodes with pref (not including PREV) that have been evaluated
         self._evaluated = {}  # {pref: [nodes]}
         compat_folder = HomePaths(conan_app.cache_folder).compatibility_plugin_path
-        self._compatibility = BinaryCompatibility(compat_folder)
+        self._compatibility = BinaryCompatibility(compat_folder, self._hook_manager)
         unknown_mode = global_conf.get("core.package_id:default_unknown_mode", default="semver_mode")
         non_embed = global_conf.get("core.package_id:default_non_embed_mode", default="minor_mode")
         # recipe_revision_mode already takes into account the package_id
@@ -397,7 +398,7 @@ class GraphBinariesAnalyzer:
         return RequirementsInfo(result)
 
     def _evaluate_package_id(self, node, config_version):
-        compute_package_id(node, self._modes, config_version=config_version)
+        compute_package_id(node, self._modes, config_version, self._hook_manager)
 
         # TODO: layout() execution don't need to be evaluated at GraphBuilder time.
         # it could even be delayed until installation time, but if we got enough info here for
