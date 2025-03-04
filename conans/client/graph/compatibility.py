@@ -5,7 +5,6 @@ from conan.api.output import ConanOutput
 from conan.internal.cache.home_paths import HomePaths
 from conans.client.graph.compute_pid import run_validate_package_id
 from conans.client.loader import load_python_file
-from conans.client.hook_manager import HookManager
 from conan.internal.errors import conanfile_exception_formatter, scoped_traceback
 from conan.errors import ConanException
 from conans.client.migrations import CONAN_GENERATED_COMMENT
@@ -107,15 +106,13 @@ def migrate_compatibility_files(cache_folder):
 
 class BinaryCompatibility:
 
-    def __init__(self, cache_folder):
-        compatibility_plugin_folder = HomePaths(cache_folder).compatibility_plugin_path
+    def __init__(self, compatibility_plugin_folder):
         compatibility_file = os.path.join(compatibility_plugin_folder, "compatibility.py")
         if not os.path.exists(compatibility_file):
             raise ConanException("The 'compatibility.py' plugin file doesn't exist. If you want "
                                  "to disable it, edit its contents instead of removing it")
         mod, _ = load_python_file(compatibility_file)
         self._compatibility = mod.compatibility
-        self._hook_manager = HookManager(HomePaths(cache_folder).hooks_path)
 
     def compatibles(self, conanfile):
         compat_infos = []
@@ -146,7 +143,7 @@ class BinaryCompatibility:
             conanfile.settings = c.settings
             conanfile.settings_target = c.settings_target
             conanfile.options = c.options
-            run_validate_package_id(conanfile, self._hook_manager)
+            run_validate_package_id(conanfile)
             pid = c.package_id()
             if pid not in result and not c.invalid:
                 result[pid] = c
