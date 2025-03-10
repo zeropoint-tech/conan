@@ -106,14 +106,13 @@ def migrate_compatibility_files(cache_folder):
 
 class BinaryCompatibility:
 
-    def __init__(self, compatibility_plugin_folder, hook_manager=None):
+    def __init__(self, compatibility_plugin_folder):
         compatibility_file = os.path.join(compatibility_plugin_folder, "compatibility.py")
         if not os.path.exists(compatibility_file):
             raise ConanException("The 'compatibility.py' plugin file doesn't exist. If you want "
                                  "to disable it, edit its contents instead of removing it")
         mod, _ = load_python_file(compatibility_file)
         self._compatibility = mod.compatibility
-        self._hook_manager = hook_manager
 
     def compatibles(self, conanfile):
         compat_infos = []
@@ -144,7 +143,7 @@ class BinaryCompatibility:
             conanfile.settings = c.settings
             conanfile.settings_target = c.settings_target
             conanfile.options = c.options
-            run_validate_package_id(conanfile, self._hook_manager)
+            run_validate_package_id(conanfile)
             pid = c.package_id()
             if pid not in result and not c.invalid:
                 result[pid] = c
