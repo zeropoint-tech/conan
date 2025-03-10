@@ -22,12 +22,6 @@ def post_export(conanfile):
     assert conanfile.export_sources_folder, "export_sources_folder not defined"
     assert conanfile.recipe_folder, "recipe_folder not defined"
 
-def pre_validate_build(conanfile):
-    conanfile.output.info("Hello")
-
-def post_validate_build(conanfile):
-    conanfile.output.info("Hello")
-
 def pre_validate(conanfile):
     conanfile.output.info("Hello")
 
@@ -124,8 +118,6 @@ class TestHooks:
         assert f"pkg/0.1: {hook_msg} post_package(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} pre_package_info(): Hello" in c.out
         assert f"pkg/0.1: {hook_msg} post_package_info(): Hello" in c.out
-        assert "pre_validate_build()" not in c.out
-        assert "post_validate_build()" not in c.out
 
     def test_import_hook(self):
         """ Test that a hook can import another random python file
@@ -191,10 +183,8 @@ class TestHooks:
         assert "conanfile.py: [HOOK - my_hook/hook_my_hook.py] post_build_fail(): Hello" in c.out
         assert "ERROR: conanfile.py: Error in build() method, line 5" in c.out
 
-    @pytest.mark.parametrize("method", ["validate_build", "validate"])
-    def test_validate_hook(self, method):
-        """ The validate_build and validate hooks are executed only if the method is declared
-            in the recipe.
+    def test_validate_hook(self):
+        """ The validate hooks are executed only if the method is declared in the recipe.
         """
         c = TestClient()
         hook_path = os.path.join(c.paths.hooks_path, "testing", "hook_complete.py")
@@ -203,11 +193,11 @@ class TestHooks:
         conanfile = textwrap.dedent("""
             from conan import ConanFile
             class Pkg(ConanFile):
-                def {method}(self):
+                def validate(self):
                     pass
-            """.format(method=method))
+            """)
         c.save({"conanfile.py": conanfile})
 
         c.run("create . --name=foo --version=0.1.0")
-        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] pre_{method}(): Hello" in c.out
-        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] post_{method}(): Hello" in c.out
+        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] pre_validate(): Hello" in c.out
+        assert f"foo/0.1.0: [HOOK - testing/hook_complete.py] post_validate(): Hello" in c.out

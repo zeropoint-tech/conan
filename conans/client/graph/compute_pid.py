@@ -64,14 +64,12 @@ def run_validate_package_id(conanfile, hook_manager):
     # IMPORTANT: This validation code must run before calling info.package_id(), to mark "invalid"
     if hasattr(conanfile, "validate_build"):
         with conanfile_exception_formatter(conanfile, "validate_build"):
-            hook_manager.execute("pre_validate_build", conanfile=conanfile)
             with conanfile_remove_attr(conanfile, ['cpp_info'], "validate_build"):
                 try:
                     conanfile.validate_build()
                 except ConanInvalidConfiguration as e:
                     # This 'cant_build' will be ignored if we don't have to build the node.
                     conanfile.info.cant_build = str(e)
-            hook_manager.execute("post_validate_build", conanfile=conanfile)
 
     if hasattr(conanfile, "validate"):
         with conanfile_exception_formatter(conanfile, "validate"):
