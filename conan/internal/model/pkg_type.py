@@ -8,6 +8,7 @@ class PackageType(Enum):
     STATIC = "static-library"
     SHARED = "shared-library"
     HEADER = "header-library"
+    FRAMEWORK = "package-framework"
     BUILD_SCRIPTS = "build-scripts"
     APP = "application"
     PYTHON = "python-require"
