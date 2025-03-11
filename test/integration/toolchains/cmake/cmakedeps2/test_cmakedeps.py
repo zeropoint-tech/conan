@@ -19,6 +19,7 @@ def test_cmakedeps_direct_deps_paths():
             def package_info(self):
                 self.cpp_info.includedirs = ["myincludes"]
                 self.cpp_info.libdirs = ["mylib"]
+                self.cpp_info.frameworkdirs = ["myframework"]
     """)
     c.save({"conanfile.py": conanfile})
     c.run("create .")
@@ -39,6 +40,7 @@ def test_cmakedeps_direct_deps_paths():
     assert re.search(r"list\(PREPEND CMAKE_PROGRAM_PATH \".*/bin\"", cmake_paths)  # default
     assert re.search(r"list\(PREPEND CMAKE_LIBRARY_PATH \".*/mylib\"", cmake_paths)
     assert re.search(r"list\(PREPEND CMAKE_INCLUDE_PATH \".*/myincludes\"", cmake_paths)
+    assert re.search(r"list\(PREPEND CMAKE_FRAMEWORK_PATH \".*/myframework\"", cmake_paths)
 
 
 def test_cmakedeps_transitive_paths():
