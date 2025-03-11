@@ -72,7 +72,7 @@ class _Component:
 
         # ##### FIELDS
         self._system_libs = None  # Ordered list of system libraries
-        self._frameworks = None  # systema Apple OS frameworks
+        self._frameworks = None  # system Apple OS frameworks
         self._package_framework = None  # any other frameworks
         self._libs = None  # The libs to link against
         self._defines = None  # preprocessor definitions
@@ -630,7 +630,7 @@ class _Component:
                                  "cannot deduce locations")
         # fully defined by user in conanfile, nothing to do.
         if self._location or self._link_location:
-            if not self._package_framework and  self._type not in [PackageType.SHARED, PackageType.STATIC]:
+            if self._type not in [PackageType.SHARED, PackageType.STATIC]:
                 raise ConanException(f"{name} location defined without defined library type")
             return
 
