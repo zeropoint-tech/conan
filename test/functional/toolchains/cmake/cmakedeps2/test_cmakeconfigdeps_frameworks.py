@@ -3,6 +3,7 @@ import textwrap
 
 import pytest
 
+from conan.internal.model.pkg_type import PackageType
 from conan.test.utils.tools import TestClient
 
 new_value = "will_break_next"
@@ -52,10 +53,10 @@ def test_osx_frameworks(shared):
     #include <string>
     void greet();
     """)
+    cpp_info_type = PackageType.SHARED if shared else PackageType.STATIC
     conanfile = textwrap.dedent(f"""
     import os
     from conan import ConanFile
-    from conan.internal.model.pkg_type import PackageType
     from conan.tools.cmake import CMake
 
     class MyFramework(ConanFile):
@@ -77,7 +78,7 @@ def test_osx_frameworks(shared):
             cmake.install()
 
         def package_info(self):
-            self.cpp_info.type = {'PackageType.SHARED' if shared else 'PackageType.STATIC'}
+            self.cpp_info.type = "{cpp_info_type}"
             self.cpp_info.package_framework = "MyFramework"
             self.cpp_info.location = os.path.join(self.package_folder, "MyFramework.framework", "MyFramework")
             # Using also a system framework
