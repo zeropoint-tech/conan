@@ -50,12 +50,7 @@ def test_osx_frameworks(shared):
     #pragma once
     #include <vector>
     #include <string>
-    #ifdef _WIN32
-      #define FRAME_EXPORT __declspec(dllexport)
-    #else
-      #define FRAME_EXPORT
-    #endif
-    FRAME_EXPORT void greet();
+    void greet();
     """)
     conanfile = textwrap.dedent(f"""
     import os
