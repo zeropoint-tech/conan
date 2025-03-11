@@ -5,16 +5,15 @@ import textwrap
 from jinja2 import Template
 
 from conan.api.output import Color
+from conan.errors import ConanException
 from conan.internal import check_duplicated_generator
 from conan.internal.api.install.generators import relativize_path
-from conan.tools.apple import is_apple_os
+from conan.internal.model.dependencies import get_transitive_requires
 from conan.tools.cmake.cmakedeps2.config import ConfigTemplate2
 from conan.tools.cmake.cmakedeps2.config_version import ConfigVersionTemplate2
 from conan.tools.cmake.cmakedeps2.target_configuration import TargetConfigurationTemplate2
 from conan.tools.cmake.cmakedeps2.targets import TargetsTemplate2
 from conan.tools.files import save
-from conan.errors import ConanException
-from conan.internal.model.dependencies import get_transitive_requires
 from conans.util.files import load
 
 FIND_MODE_MODULE = "module"
@@ -251,9 +250,7 @@ class _PathGenerator:
         cmake_program_path = self._get_cmake_paths([(req, dep) for req, dep in all_reqs if req.direct], "bindirs")
         cmake_library_path = self._get_cmake_paths(host_test_reqs, "libdirs")
         cmake_include_path = self._get_cmake_paths(host_test_reqs, "includedirs")
-        cmake_framework_path = []
-        if is_apple_os(self._conanfile):
-            cmake_framework_path = self._get_cmake_paths(host_test_reqs, "frameworkdirs")
+        cmake_framework_path = self._get_cmake_paths(host_test_reqs, "frameworkdirs")
         context = {"host_runtime_dirs": self._get_host_runtime_dirs(),
                    "pkg_paths": pkg_paths,
                    "cmake_program_path": _join_paths(self._conanfile, cmake_program_path),
