@@ -4,11 +4,9 @@ import textwrap
 import jinja2
 from jinja2 import Template
 
-from conan.api.output import ConanOutput
 from conan.errors import ConanException
-from conan.tools.apple import is_apple_os
-from conans.client.graph.graph import CONTEXT_BUILD, CONTEXT_HOST
 from conan.internal.model.pkg_type import PackageType
+from conans.client.graph.graph import CONTEXT_BUILD, CONTEXT_HOST
 
 
 class TargetConfigurationTemplate2:
@@ -18,7 +16,6 @@ class TargetConfigurationTemplate2:
     def __init__(self, cmakedeps, conanfile, require):
         self._cmakedeps = cmakedeps
         self._conanfile = conanfile  # The dependency conanfile, not the consumer one
-        self._root_conanfile = self._cmakedeps._conanfile  # noqa
         self._require = require
 
     def content(self):
@@ -186,23 +183,22 @@ class TargetConfigurationTemplate2:
                   "exelinkflags": " ".join(info.exelinkflags),
                   "system_libs": system_libs
         }
-        if is_apple_os(self._root_conanfile):
-            # System frameworks (only Apple OS)
-            if info.frameworks:
-                target['frameworks'] = " ".join([f"-framework {frw}" for frw in info.frameworks])
-            # FIXME: We're ignoring this value at this moment. It relies on cmake_target_name or lib name
-            #        Revisit when cpp.exe value is used too.
-            if info.package_framework:
-                target["package_framework"] = {}
-                lib_type = "SHARED" if info.type is PackageType.SHARED else \
-                    "STATIC" if info.type is PackageType.STATIC else "STATIC"
-                assert lib_type, f"Unknown package type {info.type}"
-                assert info.location, f"cpp_info.location missing for framework {info.package_framework}"
-                target["type"] = lib_type
-                target["package_framework"]["location"] = self._path(info.location, pkg_folder, pkg_folder_var)
-                target["includedirs"] = []  # empty array as frameworks have their own way to inject headers
-                # FIXME: This is not needed for CMake < 3.24. Remove it when Conan requires CMake >= 3.24
-                target["package_framework"]["frameworkdir"] = self._path(pkg_folder, pkg_folder, pkg_folder_var)
+        # System frameworks (only Apple OS)
+        if info.frameworks:
+            target['frameworks'] = " ".join([f"-framework {frw}" for frw in info.frameworks])
+        # FIXME: We're ignoring this value at this moment. It relies on cmake_target_name or lib name
+        #        Revisit when cpp.exe value is used too.
+        if info.package_framework:
+            target["package_framework"] = {}
+            lib_type = "SHARED" if info.type is PackageType.SHARED else \
+                "STATIC" if info.type is PackageType.STATIC else "STATIC"
+            assert lib_type, f"Unknown package type {info.type}"
+            assert info.location, f"cpp_info.location missing for framework {info.package_framework}"
+            target["type"] = lib_type
+            target["package_framework"]["location"] = self._path(info.location, pkg_folder, pkg_folder_var)
+            target["includedirs"] = []  # empty array as frameworks have their own way to inject headers
+            # FIXME: This is not needed for CMake < 3.24. Remove it when Conan requires CMake >= 3.24
+            target["package_framework"]["frameworkdir"] = self._path(pkg_folder, pkg_folder, pkg_folder_var)
         if info.libs:
             if len(info.libs) != 1:
                 raise ConanException(f"New CMakeDeps only allows 1 lib per component:\n"
