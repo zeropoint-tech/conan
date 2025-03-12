@@ -25,6 +25,12 @@ def post_package(conanfile):
     ConanOutput().success(f"CYCLONEDX CREATED - {conanfile.package_metadata_folder}")
 """
 
+@pytest.fixture()
+def hook_setup_post_package_default():
+    tc = TestClient()
+    hook_path = os.path.join(tc.paths.hooks_path, "hook_sbom.py")
+    save(hook_path, sbom_hook_post_package % ("False", "False"))
+    return tc
 
 @pytest.fixture()
 def hook_setup_post_package():
@@ -65,6 +71,18 @@ def test_sbom_generation_create(hook_setup_post_package_tl):
     tc.run("create . -tf=")
     bar_layout = tc.created_layout()
     assert os.path.exists(os.path.join(bar_layout.metadata(), "sbom.cdx.json"))
+
+def test_sbom_no_dependencies(hook_setup_post_package_default):
+    tc = hook_setup_post_package_default
+    conanfile = textwrap.dedent("""
+            from conan import ConanFile
+            class Foo(ConanFile):
+                name = 'foo'
+                version = '1.0'
+        """)
+    tc.save({"conanfile.py": conanfile})
+    tc.run("create .")
+    assert os.path.exists(os.path.join(tc.current_folder, "sbom", "sbom.cdx.json"))
 
 
 def test_sbom_generation_skipped_dependencies(hook_setup_post_package):
