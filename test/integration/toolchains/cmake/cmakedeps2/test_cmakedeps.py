@@ -247,7 +247,7 @@ def test_consuming_cpp_info_with_components_dependency_from_other_package():
     assert "find_package(pkg)" in c.out
 
 
-    def test_consuming_cpp_info_transitively_by_requiring_root_component_in_another_component_from_another_package():
+def test_consuming_cpp_info_transitively_by_requiring_root_component_in_another_component_from_another_package():
     c = TestClient()
     dependent_conanfile = textwrap.dedent("""
         from conan import ConanFile
