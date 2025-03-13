@@ -72,17 +72,31 @@ def test_sbom_generation_create(hook_setup_post_package_tl):
     bar_layout = tc.created_layout()
     assert os.path.exists(os.path.join(bar_layout.metadata(), "sbom.cdx.json"))
 
-def test_sbom_no_dependencies(hook_setup_post_package_default):
+def test_sbom_with_dependencies(hook_setup_post_package_default):
     tc = hook_setup_post_package_default
-    conanfile = textwrap.dedent("""
+    package_name = "foo"
+    dependent = textwrap.dedent("""
             from conan import ConanFile
-            class Foo(ConanFile):
-                name = 'foo'
+            class Dependent(ConanFile):
+                name = "dependent"
                 version = '1.0'
         """)
-    tc.save({"conanfile.py": conanfile})
-    tc.run("create .")
-    assert os.path.exists(os.path.join(tc.current_folder, "sbom", "sbom.cdx.json"))
+    conanfile = textwrap.dedent(f"""
+            from conan import ConanFile
+            class Foo(ConanFile):
+                name = '{package_name}'
+                version = '1.0'
+                requires = ("dependent/1.0")
+        """)
+    tc.save({"dependent/conanfile.py": dependent})
+    tc.save({"main/conanfile.py": conanfile})
+    tc.run("create ./dependent")
+    tc.run("create ./main")
+    layout = tc.created_layout()
+    assert os.path.exists(os.path.join(layout.metadata(), "sbom.cdx.json"))
+    with open(os.path.join(layout.metadata(), "sbom.cdx.json"), 'r') as file:
+        sbom_json = json.load(file)
+        assert package_name in sbom_json["metadata"]["component"]["bom-ref"]
 
 
 def test_sbom_generation_skipped_dependencies(hook_setup_post_package):
