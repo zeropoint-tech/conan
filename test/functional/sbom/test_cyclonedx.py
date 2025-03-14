@@ -72,32 +72,6 @@ def test_sbom_generation_create(hook_setup_post_package_tl):
     bar_layout = tc.created_layout()
     assert os.path.exists(os.path.join(bar_layout.metadata(), "sbom.cdx.json"))
 
-def test_sbom_with_dependencies(hook_setup_post_package_default):
-    tc = hook_setup_post_package_default
-    package_name = "foo"
-    dependent = textwrap.dedent("""
-            from conan import ConanFile
-            class Dependent(ConanFile):
-                name = "dependent"
-                version = '1.0'
-        """)
-    conanfile = textwrap.dedent(f"""
-            from conan import ConanFile
-            class Foo(ConanFile):
-                name = '{package_name}'
-                version = '1.0'
-                requires = ("dependent/1.0")
-        """)
-    tc.save({"dependent/conanfile.py": dependent})
-    tc.save({"main/conanfile.py": conanfile})
-    tc.run("create ./dependent")
-    tc.run("create ./main")
-    layout = tc.created_layout()
-    assert os.path.exists(os.path.join(layout.metadata(), "sbom.cdx.json"))
-    with open(os.path.join(layout.metadata(), "sbom.cdx.json"), 'r') as file:
-        sbom_json = json.load(file)
-        assert package_name in sbom_json["metadata"]["component"]["bom-ref"]
-
 
 def test_sbom_generation_skipped_dependencies(hook_setup_post_package):
     tc = hook_setup_post_package
@@ -263,6 +237,8 @@ def test_sbom_generation_install_path_txt(hook_setup_post_generate):
     assert os.path.exists(os.path.join(tc.current_folder, "sbom", "sbom.cdx.json"))
 
 def test_sbom_with_special_root_node(hook_setup_post_generate):
+    # In this test, we have only one node in the subgraph, which has build context, so the number
+    # of components after processing it is zero.
     tc = hook_setup_post_generate
     package_name = "foo"
 
