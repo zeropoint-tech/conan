@@ -270,7 +270,12 @@ def test_multiple_matches_exact_match(prefix, conanfile):
 @pytest.mark.parametrize("lib_name, libs", [
     ("harfbuzz", ["harfbuzz-icu.lib", "harfbuzz.lib"]),
 ])
-def test_several_libs(lib_name, libs, conanfile):
+def test_several_libs_and_exact_match(lib_name, libs, conanfile):
+    """
+    Testing that we're keeping the exact match at first instead the similar one
+
+    Issue related: https://github.com/conan-io/conan/issues/17974
+    """
     folder = temp_folder()
     for lib in libs:
         save(os.path.join(folder, "libdir", lib), "")
