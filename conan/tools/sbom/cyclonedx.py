@@ -63,19 +63,19 @@ def cyclonedx_1_4(conanfile, name=None, add_build=False, add_tests=False, **kwar
 
     sbom_cyclonedx_1_4 = {
         **({"components": [{
-            "author": c.conanfile.author or "Unknown",
-            "bom-ref": special_id if has_special_root_node else f"pkg:conan/{c.name}@{c.ref.version}?rref={c.ref.revision}",
-            "description": c.conanfile.description,
+            "author": component.conanfile.author or "Unknown",
+            "bom-ref": special_id if has_special_root_node else f"pkg:conan/{component.name}@{component.ref.version}?rref={component.ref.revision}",
+            "description": component.conanfile.description,
             **({"externalReferences": [{
                 "type": "website",
-                "url": c.conanfile.homepage
-            }]} if c.conanfile.homepage else {}),
-            **({"licenses": _calculate_licenses(c)} if c.conanfile.license else {}),
-            "name": c.name,
-            "purl": f"pkg:conan/{c.name}@{c.ref.version}",
+                "url": component.conanfile.homepage
+            }]} if component.conanfile.homepage else {}),
+            **({"licenses": _calculate_licenses(component)} if component.conanfile.license else {}),
+            "name": component.name,
+            "purl": f"pkg:conan/{component.name}@{component.ref.version}",
             "type": "library",
-            "version": str(c.ref.version),
-        } for c in components]} if components else {}),
+            "version": str(component.ref.version),
+        } for component in components]} if components else {}),
         **({"dependencies": dependencies} if dependencies else {}),
         "metadata": {
             "component": {
