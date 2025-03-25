@@ -3,9 +3,9 @@ import json
 import os
 from json import JSONDecodeError
 
+from conan.api.model import RecipeReference, PkgReference
 from conan.errors import ConanException
 from conan.internal.errors import NotFoundException
-from conan.api.model import RecipeReference, PkgReference
 from conan.internal.model.version_range import VersionRange
 from conans.client.graph.graph import RECIPE_EDITABLE, RECIPE_CONSUMER, RECIPE_PLATFORM, \
     RECIPE_VIRTUAL, BINARY_SKIP, BINARY_MISSING, BINARY_INVALID
@@ -55,19 +55,20 @@ class MultiPackagesList:
         return pkglist
 
     @staticmethod
-    def load_graph(graphfile, graph_recipes=None, graph_binaries=None):
+    def load_graph(graphfile, graph_recipes=None, graph_binaries=None, context=None):
         if not os.path.isfile(graphfile):
             raise ConanException(f"Graph file not found: {graphfile}")
         try:
             graph = json.loads(load(graphfile))
-            return MultiPackagesList._define_graph(graph, graph_recipes, graph_binaries)
+            return MultiPackagesList._define_graph(graph, graph_recipes, graph_binaries,
+                                                   context=context)
         except JSONDecodeError as e:
             raise ConanException(f"Graph file invalid JSON: {graphfile}\n{e}")
         except Exception as e:
             raise ConanException(f"Graph file broken: {graphfile}\n{e}")
 
     @staticmethod
-    def _define_graph(graph, graph_recipes=None, graph_binaries=None):
+    def _define_graph(graph, graph_recipes=None, graph_binaries=None, context=None):
         pkglist = MultiPackagesList()
         cache_list = PackagesList()
         if graph_recipes is None and graph_binaries is None:
@@ -79,6 +80,9 @@ class MultiPackagesList:
 
         pkglist.lists["Local Cache"] = cache_list
         for node in graph["graph"]["nodes"].values():
+            if context and node['context'] != context:
+                continue
+
             # We need to add the python_requires too
             python_requires = node.get("python_requires")
             if python_requires is not None:

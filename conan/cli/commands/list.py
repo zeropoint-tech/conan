@@ -7,8 +7,8 @@ from conan.cli import make_abs_path
 from conan.cli.command import conan_command, OnceArgument
 from conan.cli.formatters.list import list_packages_html
 from conan.errors import ConanException
+from conans.client.graph.graph import CONTEXT_BUILD, CONTEXT_HOST
 from conans.util.dates import timestamp_to_str
-
 
 # Keep them so we don't break other commands that import them, but TODO: Remove later
 remote_color = Color.BRIGHT_BLUE
@@ -225,6 +225,8 @@ def list(conan_api: ConanAPI, parser, *args):
     parser.add_argument("-g", "--graph", help="Graph json file")
     parser.add_argument("-gb", "--graph-binaries", help="Which binaries are listed", action="append")
     parser.add_argument("-gr", "--graph-recipes", help="Which recipes are listed", action="append")
+    parser.add_argument("-gc", "--graph-context", help="Filter the results by build or host context", default=None,
+                        action=OnceArgument, choices=[CONTEXT_BUILD, CONTEXT_HOST])
     parser.add_argument('--lru', default=None, action=OnceArgument,
                         help="List recipes and binaries that have not been recently used. Use a"
                              " time limit like --lru=5d (days) or --lru=4w (weeks),"
@@ -248,7 +250,8 @@ def list(conan_api: ConanAPI, parser, *args):
 
     if args.graph:
         graphfile = make_abs_path(args.graph)
-        pkglist = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries)
+        pkglist = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries,
+                                               args.graph_context)
     else:
         ref_pattern = ListPattern(args.pattern, rrev=None, prev=None)
         if not ref_pattern.package_id and (args.package_query or args.filter_profile or
