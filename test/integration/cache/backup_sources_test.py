@@ -204,7 +204,6 @@ class TestDownloadCacheBackupSources:
         assert f"File {self.file_server.fake_url}/mycompanystorage/mycompanyfile.txt not found in {self.file_server.fake_url}/backups/" in self.client.out
 
     def test_unknown_handling(self):
-        http_server_base_folder_backups = os.path.join(self.file_server.store, "backups")
         http_server_base_folder_internet = os.path.join(self.file_server.store, "internet")
 
         save(os.path.join(http_server_base_folder_internet, "myfile.txt"), "Hello, world!")
@@ -232,12 +231,14 @@ class TestDownloadCacheBackupSources:
         contents = json.loads(load(json_path))
         assert "unknown" in contents["references"]
 
+        s_folder = os.path.join(self.download_cache_folder, "s")
+        assert len(os.listdir(s_folder)) == 2
+
         self.client.run("export .")
         self.client.run("upload * -c -r=default")
         assert "No backup sources files to upload" in self.client.out
 
         self.client.run("cache clean --backup-sources")
-        s_folder = os.path.join(self.download_cache_folder, "s")
         assert len(os.listdir(s_folder)) == 0
 
     def test_download_origin_first(self):
