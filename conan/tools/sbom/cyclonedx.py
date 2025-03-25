@@ -63,7 +63,7 @@ def cyclonedx_1_4(conanfile, name=None, add_build=False, add_tests=False, **kwar
 
     sbom_cyclonedx_1_4 = {
         **({"components": [{
-            "author": c.author or "Unknown",
+            "author": c.conanfile.author or "Unknown",
             "bom-ref": special_id if has_special_root_node else f"pkg:conan/{c.name}@{c.ref.version}?rref={c.ref.revision}",
             "description": c.conanfile.description,
             **({"externalReferences": [{
