@@ -7,7 +7,6 @@ from conan.cli import make_abs_path
 from conan.cli.command import conan_command, OnceArgument
 from conan.cli.formatters.list import list_packages_html
 from conan.errors import ConanException
-from conans.client.graph.graph import CONTEXT_BUILD, CONTEXT_HOST
 from conans.util.dates import timestamp_to_str
 
 # Keep them so we don't break other commands that import them, but TODO: Remove later
@@ -250,17 +249,9 @@ def list(conan_api: ConanAPI, parser, *args):
         raise ConanException("'--lru' cannot be used in remotes, only in cache")
 
     if args.graph:
-        context = args.graph_context.split("-")[0] if args.graph_context else None
         graphfile = make_abs_path(args.graph)
         pkglist = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries,
-                                               context)
-        pkglist_other_context = None
-        if args.graph_context == "build-only":
-            pkglist_other_context = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries, "host")
-        elif args.graph_context == "host-only":
-            pkglist_other_context = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries, "build")
-        if pkglist_other_context:
-            pkglist.keep_outer(pkglist_other_context)
+                                               context=args.graph_context)
     else:
         ref_pattern = ListPattern(args.pattern, rrev=None, prev=None)
         if not ref_pattern.package_id and (args.package_query or args.filter_profile or

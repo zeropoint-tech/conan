@@ -63,9 +63,19 @@ class MultiPackagesList:
         if not os.path.isfile(graphfile):
             raise ConanException(f"Graph file not found: {graphfile}")
         try:
+            base_context = context.split("-")[0] if context else None
             graph = json.loads(load(graphfile))
-            return MultiPackagesList._define_graph(graph, graph_recipes, graph_binaries,
-                                                   context=context)
+            mpkglist =  MultiPackagesList._define_graph(graph, graph_recipes, graph_binaries,
+                                                              context=base_context)
+            if context == "build-only":
+                host = MultiPackagesList._define_graph(graph, graph_recipes, graph_binaries,
+                                                       context="host")
+                mpkglist.keep_outer(host)
+            elif context == "host-only":
+                build = MultiPackagesList._define_graph(graph, graph_recipes, graph_binaries,
+                                                                 context="build")
+                mpkglist.keep_outer(build)
+            return mpkglist
         except JSONDecodeError as e:
             raise ConanException(f"Graph file invalid JSON: {graphfile}\n{e}")
         except Exception as e:
