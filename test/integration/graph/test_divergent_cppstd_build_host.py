@@ -41,4 +41,3 @@ def test_divergent_cppstd_build_host():
     # rather than the exact one
     assert graph['graph']['nodes']['1']['package_id'] == graph['graph']['nodes']['3']['package_id']
 
-    print(c.out)
