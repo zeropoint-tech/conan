@@ -393,21 +393,38 @@ class TestListGraphContext:
         ("host-only", ["zlib/1.0"], ["protobuf/1.0"])
     ])
     def test_list_graph_context(self, context, refs, not_refs):
-        c = TestClient()
+        c = TestClient(default_server_user=True, light=True)
         c.save({
-            "zlib/conanfile.py": GenConanfile("zlib", "1.0").with_settings("os", "build_type", "arch"),
-            "cmake/conanfile.py": GenConanfile("cmake", "1.0").with_settings("os", "build_type", "arch"),
-            "m4/conanfile.py": GenConanfile("m4", "1.0").with_settings("os", "build_type", "arch"),
-            "protobuf/conanfile.py": GenConanfile("protobuf", "1.0").with_settings("os", "build_type", "arch"),
-            "app/conanfile.py": GenConanfile("app", "1.0").with_requires("zlib/1.0", "protobuf/1.0").with_tool_requires("cmake/1.0", "m4/1.0", "protobuf/1.0")})
+            "zlib/conanfile.py": GenConanfile("zlib", "1.0").with_settings("os"),
+            "cmake/conanfile.py": GenConanfile("cmake", "1.0").with_settings("os"),
+            "m4/conanfile.py": GenConanfile("m4", "1.0").with_settings("os"),
+            "protobuf/conanfile.py": GenConanfile("protobuf", "1.0").with_settings("os"),
+            "app/conanfile.py": GenConanfile("app", "1.0").with_settings("os")
+            .with_requires("zlib/1.0", "protobuf/1.0")
+            .with_tool_requires("cmake/1.0", "m4/1.0", "protobuf/1.0")})
         c.run("create zlib")
         c.run("create protobuf")
         c.run("create cmake")
         c.run("create m4")
         c.run("create app --format=json", redirect_stdout="graph.json")
-        c.run(f"list --graph=graph.json --graph-context={context} --format=json", redirect_stdout="pkglist.json")
-        content = json.loads(c.load("pkglist.json"))["Local Cache"]
+        # Now, let's filter the pkgs
+        c.run(f"list --graph=graph.json --graph-context={context} --format=json",
+              redirect_stdout="pkglist.json")
+        content = json.loads(c.load("pkglist.json"))
         for ref in refs:
-            assert content[ref]["revisions"]
+            assert content["Local Cache"][ref]["revisions"]
         for ref in not_refs:
-            assert content.get(ref) is None
+            assert content["Local Cache"].get(ref) is None
+        # Let's upload all the packages
+        c.run(f"list --graph=graph.json --format=json", redirect_stdout="pkglist.json")
+        c.run("upload --list=pkglist.json -r=default")
+        c.run("remove * -c")
+        c.run("create app --format=json", redirect_stdout="graph.json")
+        # Now, let's filter the pkgs
+        c.run(f"list --graph=graph.json --graph-context={context} -r=default --format=json",
+              redirect_stdout="pkglist.json")
+        content = json.loads(c.load("pkglist.json"))
+        for ref in refs:
+            assert content["default"][ref]["revisions"]
+        for ref in not_refs:
+            assert content["default"].get(ref) is None
