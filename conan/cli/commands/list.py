@@ -225,8 +225,9 @@ def list(conan_api: ConanAPI, parser, *args):
     parser.add_argument("-g", "--graph", help="Graph json file")
     parser.add_argument("-gb", "--graph-binaries", help="Which binaries are listed", action="append")
     parser.add_argument("-gr", "--graph-recipes", help="Which recipes are listed", action="append")
-    parser.add_argument("-gc", "--graph-context", help="Filter the results by build or host context", default=None,
-                        action=OnceArgument, choices=[CONTEXT_BUILD, CONTEXT_HOST])
+    parser.add_argument("-gc", "--graph-context", help="Filter the results by the given context",
+                        default=None, action=OnceArgument,
+                        choices=["build", "host", "build-only", "host-only"])
     parser.add_argument('--lru', default=None, action=OnceArgument,
                         help="List recipes and binaries that have not been recently used. Use a"
                              " time limit like --lru=5d (days) or --lru=4w (weeks),"
@@ -249,9 +250,17 @@ def list(conan_api: ConanAPI, parser, *args):
         raise ConanException("'--lru' cannot be used in remotes, only in cache")
 
     if args.graph:
+        context = args.graph_context.split("-")[0] if args.graph_context else None
         graphfile = make_abs_path(args.graph)
         pkglist = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries,
-                                               args.graph_context)
+                                               context)
+        pkglist_other_context = None
+        if args.graph_context == "build-only":
+            pkglist_other_context = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries, "host")
+        elif args.graph_context == "host-only":
+            pkglist_other_context = MultiPackagesList.load_graph(graphfile, args.graph_recipes, args.graph_binaries, "build")
+        if pkglist_other_context:
+            pkglist.keep_outer(pkglist_other_context)
     else:
         ref_pattern = ListPattern(args.pattern, rrev=None, prev=None)
         if not ref_pattern.package_id and (args.package_query or args.filter_profile or

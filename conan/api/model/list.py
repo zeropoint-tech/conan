@@ -36,6 +36,10 @@ class MultiPackagesList:
         for k, v in other.lists.items():
             self.lists.setdefault(k, PackagesList()).merge(v)
 
+    def keep_outer(self, other):
+        for namespace, other_pkg_list in other.lists.items():
+            self.lists.get(namespace, PackagesList()).keep_outer(other_pkg_list)
+
     @staticmethod
     def load(file):
         try:
@@ -145,6 +149,14 @@ class PackagesList:
                     d[k] = v
             return d
         recursive_dict_update(self.recipes, other.recipes)
+
+    def keep_outer(self, other):
+        if not self.recipes:
+            return
+
+        for ref, info in other.recipes.items():
+            if self.recipes.get(ref, {}) == info:
+                self.recipes.pop(ref)
 
     def split(self):
         """
