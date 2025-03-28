@@ -7,7 +7,7 @@ from conan.test.assets.cmake import gen_cmakelists
 from conan.test.assets.sources import gen_function_h, gen_function_cpp
 
 
-def docker_skip(test_image='ubuntu:24.04'):
+def docker_skip(test_image='ubuntu:22.04'):
     try:
         try:
             docker_client = docker.from_env()
