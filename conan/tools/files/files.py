@@ -1,5 +1,6 @@
 import gzip
 import os
+import stat
 import platform
 import shutil
 import subprocess
@@ -261,6 +262,48 @@ def chdir(conanfile, newdir):
         yield
     finally:
         os.chdir(old_path)
+
+
+def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=None, recursive:bool=False):
+    """
+    Change the permissions of a file or directory. The same as the Unix command chmod, but simplified.
+    On Windows is limited to changing write permission only.
+
+    :param conanfile: The current recipe object. Always use ``self``.
+    :param path: Path to the file or directory to change the permissions.
+    :param read: If ``True``, the file or directory will have read permissions for owner user.
+    :param write: If ``True``, the file or directory will have write permissions for owner user.
+    :param execute: If ``True``, the file or directory will have execute permissions for owner user.
+    :param recursive: If ``True``, the permissions will be applied
+    """
+    if read is None and write is None and execute is None:
+        raise ConanException("Could not change permission: At least one of the permissions should be set.")
+
+    if not os.path.exists(path):
+        raise ConanException(f"Could not change permission: Path \"{path}\" does not exist.")
+
+    def _change_permission(it_path:str):
+        mode = os.stat(it_path).st_mode
+        permissions = [
+            (read, stat.S_IRUSR),
+            (write, stat.S_IWUSR),
+            (execute, stat.S_IXUSR)
+        ]
+        for enabled, mask in permissions:
+            if enabled is None:
+                continue
+            elif enabled:
+                mode |= mask
+            else:
+                mode &= ~mask
+        os.chmod(it_path, mode)
+
+    if recursive:
+        for root, _, files in os.walk(path):
+            for file in files:
+                _change_permission(os.path.join(root, file))
+    else:
+        _change_permission(path)
 
 
 def unzip(conanfile, filename, destination=".", keep_permissions=False, pattern=None,
