@@ -1,4 +1,4 @@
-from conan.api.output import ConanOutput, Color, LEVEL_VERBOSE
+from conan.api.output import ConanOutput, Color, LEVEL_VERBOSE, LEVEL_DEBUG
 from conans.client.graph.graph import BINARY_INVALID, BINARY_MISSING, RECIPE_CONSUMER, \
     RECIPE_VIRTUAL, CONTEXT_BUILD, BINARY_SKIP, \
     BINARY_PLATFORM, BINARY_BUILD
@@ -149,9 +149,10 @@ def print_graph_packages(graph):
                 if remote:
                     msg += f" ({remote.name})"
                 output.info(msg, Color.BRIGHT_CYAN)
-            compact_dumps = info.dumps_compact()
-            for line in compact_dumps:
-                output.debug(f"{tab}{tab}{line}", Color.BRIGHT_GREEN)
+            if output.level_allowed(LEVEL_DEBUG):
+                compact_dumps = info.summarize_compact()
+                for line in compact_dumps:
+                    output.debug(f"{tab}{tab}{line}", Color.BRIGHT_GREEN)
 
     _format_requires("Requirements", requires)
     _format_requires("Test requirements", test_requires)

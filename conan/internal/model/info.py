@@ -432,7 +432,7 @@ class ConanInfo:
         result.append("")  # Append endline so file ends with LF
         return '\n'.join(result)
 
-    def dumps_compact(self):
+    def summarize_compact(self):
         result = []
         serialized = self.serialize()
 

@@ -309,7 +309,7 @@ class BinaryInstaller:
             ConanOutput(scope=str(pref.ref))\
                 .highlight("Building from source")\
                 .info(f"Package {pref}")
-            compact_dumps = package.nodes[0].conanfile.info.dumps_compact()
+            compact_dumps = package.nodes[0].conanfile.info.summarize_compact()
             for line in compact_dumps:
                 ConanOutput(scope=str(pref.ref)).info(line, fg=Color.BRIGHT_GREEN)
             package_layout = self._cache.create_build_pkg_layout(pref)
