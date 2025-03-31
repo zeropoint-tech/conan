@@ -4,6 +4,7 @@ import stat
 import platform
 import shutil
 import subprocess
+from typing import Optional
 from contextlib import contextmanager
 from fnmatch import fnmatch
 from shutil import which
@@ -264,17 +265,53 @@ def chdir(conanfile, newdir):
         os.chdir(old_path)
 
 
-def chmod(conanfile, path:str, read:bool=None, write:bool=None, execute:bool=None, recursive:bool=False):
-    """
-    Change the permissions of a file or directory. The same as the Unix command chmod, but simplified.
+def chmod(conanfile, path:str, read:Optional[bool]=None, write:Optional[bool]=None, execute:Optional[bool]=None, recursive:bool=False):
+    """Change file or directory permissions cross-platform.
+
+    .. versionadded:: 2.15
+
+    This function is a simple wrapper around the chmod Unix command, but it is cross-platform supported.
+    It is indicated to use it instead of os.stat + os.chmod, as it only changes the permissions of the
+    directory or file for the owner and avoids issues with the umask.
     On Windows is limited to changing write permission only.
 
-    :param conanfile: The current recipe object. Always use ``self``.
-    :param path: Path to the file or directory to change the permissions.
-    :param read: If ``True``, the file or directory will have read permissions for owner user.
-    :param write: If ``True``, the file or directory will have write permissions for owner user.
-    :param execute: If ``True``, the file or directory will have execute permissions for owner user.
-    :param recursive: If ``True``, the permissions will be applied
+    Parameters
+    ----------
+    conanfile : object
+        The current recipe object. Always use ``self``.
+    path : str
+        Path to the file or directory whose permissions will be changed.
+    read : bool, optional
+        If ``True``, the file or directory will be given read permissions for owner user.
+        If ``False``, the read permission will be removed.
+        If ``None``, the read permission will be left unchanged.
+        Defaults to None.
+    write : bool, optional
+        If ``True``, the file or directory will be given write permissions for owner user.
+        If ``False``, the write permission will be removed.
+        If ``None``, the file or directory will not be changed.
+        Defaults to None.
+    execute : bool, optional
+        If ``True``, the file or directory will be given execute permissions for owner user.
+        If ``False``, the execution permission will be removed.
+        If ``None``, the file or directory will not be changed.
+        Defaults to None.
+    recursive : bool
+        If ``True``, the permissions will be applied recursively to all files and directories
+        inside the specified directory. If ``False``, only the specified file or directory will
+        be changed. Defaults to False.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    .. code-block:: python
+        :caption: Add execution permission to a packaged bash script
+
+        from conan.tools.files import chmod
+        chmod(self, os.path.join(self.package_folder, "bin", "script.sh"), execute=True)
     """
     if read is None and write is None and execute is None:
         raise ConanException("Could not change permission: At least one of the permissions should be set.")
