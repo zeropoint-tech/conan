@@ -441,8 +441,6 @@ class ConanInfo:
                 result.append(f"{key}: " + " ".join(f"{k}={v}" for k, v in values.items()))
             elif isinstance(values, type([])):
                 result.append(f"{key}: {' '.join(values)}")
-            elif values:
-                result.append(f"{key}: {' '.join(values)}")
 
         return result
 
