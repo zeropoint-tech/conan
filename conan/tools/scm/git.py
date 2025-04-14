@@ -280,6 +280,6 @@ class Git:
         "commit" and then do a ``clone(url, target=".")``, ``fetch <commit>``, followed by a ``checkout(commit)``.
         """
         sources = self._conanfile.conan_data["scm"]
-        self.clone(url=sources["url"], target=".")
+        self.clone(url=sources["url"], target=".", args=["--origin=origin"])
         self.run(f"fetch origin {sources['commit']}")
         self.checkout(commit=sources["commit"])
