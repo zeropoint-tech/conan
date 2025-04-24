@@ -59,7 +59,8 @@ def test_conan_audit_paths():
                     ]
                 }
             }
-        }
+        },
+        "error": None
     }
 
     tc = TestClient(light=True)
@@ -86,13 +87,13 @@ def test_conan_audit_paths():
 
     # Now some common errors, like rate limited or missing lib, but it should not fail!
     with proxy_response(429, {"error": "Rate limit exceeded"}):
-        tc.run("audit list zlib/1.2.11")
+        tc.run("audit list zlib/1.2.11", assert_error=True)
         assert "You have exceeded the number of allowed requests" in tc.out
         assert "The limit will reset in 1 minute" in tc.out
 
     with proxy_response(400, {"error": "Not found"}):
         tc.run("audit list zlib/1.2.11")
-        assert "Package 'zlib/1.2.11' not found" in tc.out
+        assert "Package 'zlib/1.2.11' not scanned: Not found." in tc.stdout
 
     tc.run("audit provider add myprivate --url=foo --type=private --token=valid_token")
 
@@ -184,3 +185,27 @@ def test_audit_provider_env_credentials_with_proxy(monkeypatch):
 
     # Verify that the Authorization header uses the token from the environment variable
     assert captured_headers.get("Authorization") == "Bearer env_token_value"
+
+
+def test_audit_global_error_exception():
+    """
+    Test that a global error returned by the provider results in ConanException
+    raised by the formatter, using the 'details' field.
+    """
+    tc = TestClient(light=True)
+    tc.run("audit provider auth conancenter --token=valid_token")
+
+    mock_provider_result = {
+        "data": {},
+        "conan_error": "Fatal error."
+    }
+
+    with patch("conan.api.conan_api.AuditAPI.list", return_value=mock_provider_result):
+        tc.run("audit list zlib/1.2.11", assert_error=True)
+        assert "ERROR: Fatal error." in tc.out
+
+        tc.run("audit list zlib/1.2.11 -f json", assert_error=True)
+        assert "ERROR: Fatal error." in tc.out
+
+        tc.run("audit list zlib/1.2.11 -f html", assert_error=True)
+        assert "ERROR: Fatal error." in tc.out
