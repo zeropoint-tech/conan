@@ -199,6 +199,8 @@ def prepare_pkglist_compact(pkglist):
 
 def print_list_json(data):
     results = data["results"]
+    if data.get("dry_run_info"):
+        results["dry_run_info"] = data["dry_run_info"]
     myjson = json.dumps(results, indent=4)
     cli_out_write(myjson)
 
