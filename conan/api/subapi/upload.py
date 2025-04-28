@@ -104,12 +104,12 @@ class UploadAPI:
                     is_summary = file.endswith(".json")
                     try:
                         if is_summary or not uploader.exists(full_url, auth=None):
-                            _info[file] = {'file_name': os.path.basename(file), 'url': full_url, 'checksum': sha1sum(file)}
+                            _info[basename] = {'file_path': file, 'url': full_url, 'checksum': sha1sum(file)}
                         else:
                             output.info(f"File '{basename}' already in backup sources server, skipping upload")
                     except (AuthenticationException, ForbiddenException):
                         output.warning(f"Forbidden access to {url}")
-        return _info
+        return {'backup_sources': _info}
 
     def _dry_run_output(self, package_list, dry_run_info):
         #  TODO: add _dry_run_backup_sources info
@@ -132,6 +132,8 @@ class UploadAPI:
                             }
                             for file_name, full_path in revision['packages'][package]['revisions'][prev]['files'].items()
                         }
+        if dry_run_info.get('backup_sources'):
+            package_list.recipes['backup_sources'] = dry_run_info['backup_sources']
         return package_list
 
     def upload(self, package_list, remote):
