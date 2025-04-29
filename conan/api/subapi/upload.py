@@ -114,23 +114,24 @@ class UploadAPI:
     def _add_upload_info(self, package_list, upload_info):
         for ref in package_list.recipes.keys():
             for rev, revision in package_list.recipes[ref]['revisions'].items():
-                package_list.recipes[ref]['revisions'][rev]['upload_urls'] = {
-                    file_name: {
-                        'url': upload_info.get(full_path, {'url': None})['url'],
-                        'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
-                    }
-                    for file_name, full_path in revision['files'].items()
-                }
-                package_list.recipes[ref]['revisions'][rev]
-                for package in revision['packages'].keys():
-                    for prev in revision['packages'][package]['revisions'].keys():
-                        package_list.recipes[ref]['revisions'][rev]['packages'][package]['revisions'][prev]['upload_urls'] = {
-                            file_name: {
-                                'url': upload_info.get(full_path, {'url': None})['url'],
-                                'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
-                            }
-                            for file_name, full_path in revision['packages'][package]['revisions'][prev]['files'].items()
+                if revision.get('files'):
+                    package_list.recipes[ref]['revisions'][rev]['upload_urls'] = {
+                        file_name: {
+                            'url': upload_info.get(full_path, {'url': None})['url'],
+                            'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
                         }
+                        for file_name, full_path in revision['files'].items()
+                    }
+                if revision.get('packages'):
+                    for package in revision['packages'].keys():
+                        for prev in revision['packages'][package]['revisions'].keys():
+                            package_list.recipes[ref]['revisions'][rev]['packages'][package]['revisions'][prev]['upload_urls'] = {
+                                file_name: {
+                                    'url': upload_info.get(full_path, {'url': None})['url'],
+                                    'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
+                                }
+                                for file_name, full_path in revision['packages'][package]['revisions'][prev]['files'].items()
+                            }
         if upload_info.get('backup_sources'):
             package_list.recipes['backup_sources'] = upload_info['backup_sources']
         return package_list
