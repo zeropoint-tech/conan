@@ -101,8 +101,8 @@ def upload(conan_api: ConanAPI, parser, *args):
         if not args.list and not args.confirm and "*" in args.pattern:
             _ask_confirm_upload(conan_api, package_list)
 
-        package_list = conan_api.upload.upload_full(package_list, remote, enabled_remotes, args.check,
-                                                    args.force, args.metadata, args.dry_run)
+        conan_api.upload.upload_full(package_list, remote, enabled_remotes, args.check,
+                                     args.force, args.metadata, args.dry_run)
     elif args.list:
         # Don't error on no recipes for automated workflows using list,
         # but warn to tell the user that no packages were uploaded
@@ -112,7 +112,6 @@ def upload(conan_api: ConanAPI, parser, *args):
 
     pkglist = MultiPackagesList()
     pkglist.add(remote.name, package_list)
-
     return {
         "results": pkglist.serialize(),
         "conan_api": conan_api
