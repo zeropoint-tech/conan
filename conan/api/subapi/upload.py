@@ -125,13 +125,14 @@ class UploadAPI:
                 if revision.get('packages'):
                     for package in revision['packages'].keys():
                         for prev in revision['packages'][package]['revisions'].keys():
-                            package_list.recipes[ref]['revisions'][rev]['packages'][package]['revisions'][prev]['upload_urls'] = {
-                                file_name: {
-                                    'url': upload_info.get(full_path, {'url': None})['url'],
-                                    'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
+                            if revision['packages'][package]['revisions'][prev].get('files'):
+                                package_list.recipes[ref]['revisions'][rev]['packages'][package]['revisions'][prev]['upload_urls'] = {
+                                    file_name: {
+                                        'url': upload_info.get(full_path, {'url': None})['url'],
+                                        'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
+                                    }
+                                    for file_name, full_path in revision['packages'][package]['revisions'][prev]['files'].items()
                                 }
-                                for file_name, full_path in revision['packages'][package]['revisions'][prev]['files'].items()
-                            }
         if upload_info.get('backup_sources'):
             package_list.recipes['backup_sources'] = upload_info['backup_sources']
         return package_list
