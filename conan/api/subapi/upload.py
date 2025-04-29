@@ -55,7 +55,7 @@ class UploadAPI:
         # This might add files entries to package_list with signatures
         signer.sign(package_list)
 
-    def _dry_run(self, package_list, remote, enabled_remotes, metadata=None):
+    def _upload_info(self, package_list, remote, enabled_remotes, metadata=None):
         output = ConanOutput()
         router = ClientV2Router(remote.url.rstrip("/"))
         self.prepare(package_list, enabled_remotes, metadata)
@@ -84,7 +84,7 @@ class UploadAPI:
                             output.warning(f"Forbidden access to {remote.url}")
         return _info
 
-    def _dry_run_backup_sources(self, package_list):
+    def _upload_info_backup_sources(self, package_list):
         _info = {}
         backup_files = self.conan_api.cache.get_backup_sources(package_list)
         config = self.conan_api.config.global_conf
@@ -111,14 +111,13 @@ class UploadAPI:
                         output.warning(f"Forbidden access to {url}")
         return {'backup_sources': _info}
 
-    def _dry_run_output(self, package_list, dry_run_info):
-        #  TODO: add _dry_run_backup_sources info
+    def _add_upload_info(self, package_list, upload_info):
         for ref in package_list.recipes.keys():
             for rev, revision in package_list.recipes[ref]['revisions'].items():
                 package_list.recipes[ref]['revisions'][rev]['upload_urls'] = {
                     file_name: {
-                        'url': dry_run_info.get(full_path, {'url': None})['url'],
-                        'checksum': dry_run_info.get(full_path, {'checksum': None})['checksum']
+                        'url': upload_info.get(full_path, {'url': None})['url'],
+                        'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
                     }
                     for file_name, full_path in revision['files'].items()
                 }
@@ -127,13 +126,13 @@ class UploadAPI:
                     for prev in revision['packages'][package]['revisions'].keys():
                         package_list.recipes[ref]['revisions'][rev]['packages'][package]['revisions'][prev]['upload_urls'] = {
                             file_name: {
-                                'url': dry_run_info.get(full_path, {'url': None})['url'],
-                                'checksum': dry_run_info.get(full_path, {'checksum': None})['checksum']
+                                'url': upload_info.get(full_path, {'url': None})['url'],
+                                'checksum': upload_info.get(full_path, {'checksum': None})['checksum']
                             }
                             for file_name, full_path in revision['packages'][package]['revisions'][prev]['files'].items()
                         }
-        if dry_run_info.get('backup_sources'):
-            package_list.recipes['backup_sources'] = dry_run_info['backup_sources']
+        if upload_info.get('backup_sources'):
+            package_list.recipes['backup_sources'] = upload_info['backup_sources']
         return package_list
 
     def upload(self, package_list, remote):
@@ -152,7 +151,7 @@ class UploadAPI:
         - execute the actual upload
         - upload potential sources backups
         """
-        dry_run_info = {}
+        upload_info = {}
 
         def _upload_pkglist(pkglist, subtitle=lambda _: None):
             if check_integrity:
@@ -170,8 +169,8 @@ class UploadAPI:
                 backup_files = self.conan_api.cache.get_backup_sources(pkglist)
                 self.upload_backup_sources(backup_files)
             else:
-                dry_run_info.update(self._dry_run(pkglist, remote, enabled_remotes, metadata))
-                dry_run_info.update(self._dry_run_backup_sources(pkglist))
+                upload_info.update(self._upload_info(pkglist, remote, enabled_remotes, metadata))
+                upload_info.update(self._upload_info_backup_sources(pkglist))
 
         t = time.time()
         ConanOutput().title(f"Uploading to remote {remote.name}")
@@ -187,9 +186,7 @@ class UploadAPI:
             thread_pool.join()
         elapsed = time.time() - t
         ConanOutput().success(f"Upload completed in {int(elapsed)}s\n")
-        if dry_run:
-            return self._dry_run_output(package_list, dry_run_info)
-        return package_list
+        return self._add_upload_info(package_list, upload_info)
 
     def upload_backup_sources(self, files):
         config = self.conan_api.config.global_conf
