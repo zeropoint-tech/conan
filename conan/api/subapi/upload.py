@@ -70,6 +70,7 @@ class UploadAPI:
                     _info[fn] = {'path': abs_path, 'url': full_url, 'checksum': sha1sum(abs_path)}
             except (AuthenticationException, ForbiddenException):
                 output.warning(f"Forbidden access to {remote.url}")
+
         for ref, bundle in package_list.refs().items():
             _info = {}
             if bundle.get("upload"):
