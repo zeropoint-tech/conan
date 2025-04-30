@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from conans.client.graph.graph_error import GraphError
+from conan.internal.graph.graph_error import GraphError
 from conan.api.model import PkgReference
 from conan.api.model import RecipeReference
 
@@ -41,7 +41,7 @@ class TransitiveRequirement:
         return "Require: {}, Node: {}".format(repr(self.require), repr(self.node))
 
 
-class Node(object):
+class Node:
     def __init__(self, ref, conanfile, context, recipe=None, path=None, test=False):
         self.ref = ref
         self.path = path  # path to the consumer conanfile.xx for consumer, None otherwise
@@ -258,7 +258,7 @@ class Node(object):
         result["prev_timestamp"] = self.pref_timestamp
         result["remote"] = self.remote.name if self.remote else None
         result["binary_remote"] = self.binary_remote.name if self.binary_remote else None
-        from conans.client.installer import build_id
+        from conan.internal.graph.installer import build_id
         result["build_id"] = build_id(self.conanfile)
         result["binary"] = self.binary
         # TODO: This doesn't match the model, check it
@@ -291,7 +291,7 @@ class Node(object):
         return Overrides.create(nodes)
 
 
-class Edge(object):
+class Edge:
     def __init__(self, src, dst, require):
         self.src = src
         self.dst = dst
@@ -354,7 +354,7 @@ class Overrides:
         return result
 
 
-class DepsGraph(object):
+class DepsGraph:
     def __init__(self):
         self.nodes = []
         self.aliased = {}
