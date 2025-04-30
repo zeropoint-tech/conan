@@ -7,9 +7,11 @@ from conan.internal.conan_app import ConanApp
 from conan.internal.api.uploader import PackagePreparator, UploadExecutor, UploadUpstreamChecker, \
     gather_metadata
 from conans.client.pkg_sign import PkgSignaturesPlugin
+from conans.client.rest.client_routes import ClientV2Router
 from conans.client.rest.file_uploader import FileUploader
 from conan.internal.errors import AuthenticationException, ForbiddenException
 from conan.errors import ConanException
+from conans.util.files import sha1sum
 
 
 class UploadAPI:
@@ -54,8 +56,6 @@ class UploadAPI:
 
     @staticmethod
     def add_urls(package_list, remote, backup_files, upload_url):
-        from conans.client.rest.client_routes import ClientV2Router
-        from conans.util.files import sha1sum
         router = ClientV2Router(remote.url.rstrip("/"))
         for ref, bundle in package_list.refs().items():
             for f, fp in bundle.get("files", {}).items():
