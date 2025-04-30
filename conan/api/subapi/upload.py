@@ -58,12 +58,12 @@ class UploadAPI:
         from conans.util.files import sha1sum
         router = ClientV2Router(remote.url.rstrip("/"))
         for ref, bundle in package_list.refs().items():
-            for f, fp in bundle["files"].items():
+            for f, fp in bundle.get("files", {}).items():
                 bundle.setdefault("urls", {})[f] = {
                     'url': router.recipe_file(ref, f), 'checksum': sha1sum(fp)
                 }
             for pref, prev_bundle in package_list.prefs(ref, bundle).items():
-                for f, fp in prev_bundle["files"].items():
+                for f, fp in prev_bundle.get("files", {}).items():
                     prev_bundle.setdefault("urls", {})[f] = {
                         'url': router.package_file(pref, f), 'checksum': sha1sum(fp)
                     }
