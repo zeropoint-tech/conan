@@ -7,7 +7,6 @@ from conan.internal.conan_app import ConanApp
 from conan.internal.api.uploader import PackagePreparator, UploadExecutor, UploadUpstreamChecker, \
     gather_metadata
 from conans.client.pkg_sign import PkgSignaturesPlugin
-from conans.client.rest.client_routes import ClientV2Router
 from conans.client.rest.file_uploader import FileUploader
 from conan.internal.errors import AuthenticationException, ForbiddenException
 from conan.errors import ConanException
@@ -55,58 +54,29 @@ class UploadAPI:
         # This might add files entries to package_list with signatures
         signer.sign(package_list)
 
-    def _upload_info(self, package_list, remote, enabled_remotes, metadata=None):
-        output = ConanOutput()
+    @staticmethod
+    def add_urls(package_list, remote, backup_files, upload_url):
+        from conans.client.rest.client_routes import ClientV2Router
         router = ClientV2Router(remote.url.rstrip("/"))
-        self.prepare(package_list, enabled_remotes, metadata)
-        requester = self.conan_api.remotes.requester
-        config = self.conan_api.config.global_conf
-        uploader = FileUploader(requester, verify=True, config=config, source_credentials=True)
-        _, token = ConanApp(self.conan_api).remote_manager._auth_manager._creds.get(remote)
-
-        def _add_if_not_exist(full_url, fn, abs_path, _info):
-            try:
-                if not uploader.exists(full_url, auth=JWTAuth(token)):
-                    _info[fn] = {'path': abs_path, 'url': full_url, 'checksum': sha1sum(abs_path)}
-            except (AuthenticationException, ForbiddenException):
-                output.warning(f"Forbidden access to {remote.url}")
-
         for ref, bundle in package_list.refs().items():
-            _info = {}
-            if bundle.get("upload"):
-                for fn, abs_path in bundle['files'].items():
-                    _add_if_not_exist(router.recipe_file(ref, fn), fn, abs_path, _info)
-                package_list.recipes[str(ref)]['revisions'][ref.revision]['upload_urls'] = _info
+            for f, fp in bundle["files"].items():
+                bundle.setdefault("urls", {})[f] = {
+                    'url': router.recipe_file(ref, f), 'checksum': sha1sum(fp)
+                }
             for pref, prev_bundle in package_list.prefs(ref, bundle).items():
-                _info = {}
-                if prev_bundle.get("upload"):
-                    for fn, abs_path in prev_bundle['files'].items():
-                        _add_if_not_exist(router.package_file(pref, fn), fn, abs_path, _info)
-                package_list.recipes[str(ref)]['revisions'][ref.revision]['packages'][pref.package_id]['revisions'][pref.revision]['upload_urls'] = _info
+                for f, fp in prev_bundle["files"].items():
+                    prev_bundle.setdefault("urls", {})[f] = {
+                        'url': router.package_file(pref, f), 'checksum': sha1sum(fp)
+                    }
 
-    def _upload_info_backup_sources(self, package_list):
-        package_list.recipes['backup_sources'] = {}
-        backup_files = self.conan_api.cache.get_backup_sources(package_list)
-        config = self.conan_api.config.global_conf
-        url = config.get("core.sources:upload_url", check_type=str)
-        if url:
-            url = url if url.endswith("/") else url + "/"
-
-            output = ConanOutput()
+        if upload_url:
+            url = upload_url if upload_url.endswith("/") else upload_url + "/"
             if backup_files:
-                requester = self.conan_api.remotes.requester
-                uploader = FileUploader(requester, verify=True, config=config, source_credentials=True)
-                # TODO: For Artifactory, we can list all files once and check from there instead
-                #  of 1 request per file, but this is more general
                 for file in backup_files:
                     basename = os.path.basename(file)
-                    try:
-                        if file.endswith(".json") or not uploader.exists(url + basename, auth=None):
-                            package_list.recipes['backup_sources'][basename] = {'file_path': file, 'url': url + basename, 'checksum': sha1sum(file)}
-                        else:
-                            output.info(f"File '{basename}' already in backup sources server, skipping upload")
-                    except (AuthenticationException, ForbiddenException):
-                        output.warning(f"Forbidden access to {url}")
+                    package_list.recipes.setdefault('backup_sources', {})[basename] = {
+                        'file_path': file, 'url': url + basename, 'checksum': sha1sum(file)
+                    }
 
     def upload(self, package_list, remote):
         app = ConanApp(self.conan_api)
@@ -140,9 +110,6 @@ class UploadAPI:
                 self.upload(pkglist, remote)
                 backup_files = self.conan_api.cache.get_backup_sources(pkglist)
                 self.upload_backup_sources(backup_files)
-            self._upload_info(pkglist, remote, enabled_remotes, metadata)
-            self._upload_info_backup_sources(pkglist)
-            return pkglist
 
         t = time.time()
         ConanOutput().title(f"Uploading to remote {remote.name}")
@@ -152,13 +119,15 @@ class UploadAPI:
             _upload_pkglist(package_list, subtitle=ConanOutput().subtitle)
         else:
             ConanOutput().subtitle(f"Uploading with {parallel} parallel threads")
-            for pkglist in thread_pool.map(_upload_pkglist, package_list.split()):
-                package_list.merge(pkglist)
+            thread_pool.map(_upload_pkglist, package_list.split())
         if thread_pool:
             thread_pool.close()
             thread_pool.join()
         elapsed = time.time() - t
         ConanOutput().success(f"Upload completed in {int(elapsed)}s\n")
+        self.add_urls(package_list, remote,
+                      self.conan_api.cache.get_backup_sources(package_list),
+                      self.conan_api.config.global_conf.get("core.sources:upload_url", check_type=str))
 
     def upload_backup_sources(self, files):
         config = self.conan_api.config.global_conf
