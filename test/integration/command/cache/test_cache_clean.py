@@ -24,7 +24,8 @@ def test_cache_clean(use_pkglist):
     assert os.path.exists(pkg_layout.download_package())
 
     if use_pkglist:
-        c.run("list *:* -f=json", redirect_stdout="pkglist.json")
+        c.run("list *:*#* -f=json", redirect_stdout="pkglist.json")
+        pkglist = c.load("pkglist.json")
     arg = "--list=pkglist.json" if use_pkglist else "*"
     c.run(f'cache clean {arg} -s -b')
     assert not os.path.exists(pkg_layout.build())

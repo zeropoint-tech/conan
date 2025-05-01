@@ -26,7 +26,7 @@ def test_cache_integrity(use_pkglist):
     save(conaninfo, "[settings]")
 
     if use_pkglist:
-        t.run("list *:* -f=json", redirect_stdout="pkglist.json")
+        t.run("list *:*#* -f=json", redirect_stdout="pkglist.json")
     arg = "--list=pkglist.json" if use_pkglist else "*"
 
     t.run(f"cache check-integrity {arg}", assert_error=True)
