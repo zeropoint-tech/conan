@@ -161,22 +161,22 @@ class TestDownloadCacheBackupSources:
         list_pkgs = json.loads(self.client.stdout)
         assert list_pkgs["default"]["backup_sources"] == {
             "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json": {
-                "file_path": f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json",
+                "file_path": os.path.join(self.download_cache_folder, "s", "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json"),
                 "url": f"{self.file_server.fake_url}/backups/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json",
                 "checksum": sha1sum(f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json")
             },
             "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3": {
-                "file_path": f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3",
+                "file_path": os.path.join(self.download_cache_folder, "s", "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3"),
                 "url": f"{self.file_server.fake_url}/backups/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3",
                 "checksum": sha1sum(f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3")
             },
             "744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json": {
-                "file_path": f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json",
+                "file_path": os.path.join(self.download_cache_folder, "s", "744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json"),
                 "url": f"{self.file_server.fake_url}/backups/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json",
                 "checksum": sha1sum(f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json")
             },
             "744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df": {
-                "file_path": f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df",
+                "file_path": os.path.join(self.download_cache_folder, "s", "744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df"),
                 "url": f"{self.file_server.fake_url}/backups/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df",
                 "checksum": sha1sum(f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df")
             }
