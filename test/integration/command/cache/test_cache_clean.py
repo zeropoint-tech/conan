@@ -6,7 +6,7 @@ import pytest
 from conan.test.assets.genconanfile import GenConanfile
 from conan.test.utils.test_files import temp_folder
 from conan.test.utils.tools import TestClient
-from conans.util.files import save
+from conan.internal.util.files import save
 
 
 @pytest.mark.parametrize("use_pkglist", [True, False])
