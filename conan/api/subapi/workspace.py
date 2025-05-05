@@ -17,7 +17,7 @@ from conan.internal.graph.graph import TransitiveRequirement
 from conan.internal.graph.profile_node_definer import consumer_definer
 from conan.internal.loader import load_python_file
 from conan.internal.source import retrieve_exports_sources
-from conans.util.files import merge_directories
+from conan.internal.util.files import merge_directories
 
 
 def _find_ws_folder():
@@ -204,6 +204,10 @@ class WorkspaceAPI:
     def remove(self, path):
         self._check_ws()
         return self._ws.remove(path)
+
+    def clean(self):
+        self._check_ws()
+        return self._ws.clean()
 
     def info(self):
         self._check_ws()

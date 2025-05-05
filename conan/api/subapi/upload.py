@@ -11,7 +11,7 @@ from conan.errors import ConanException
 from conan.internal.rest.client_routes import ClientV2Router
 from conan.internal.rest.file_uploader import FileUploader
 from conan.internal.rest.pkg_sign import PkgSignaturesPlugin
-from conans.util.files import sha1sum
+from conan.internal.util.files import sha1sum
 
 
 class UploadAPI:
