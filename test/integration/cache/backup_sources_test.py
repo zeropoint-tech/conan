@@ -14,7 +14,7 @@ from conan.errors import ConanException
 from conan.test.utils.file_server import TestFileServer
 from conan.test.utils.test_files import temp_folder
 from conan.test.utils.tools import TestClient
-from conans.util.files import save, load, rmdir, mkdir, remove
+from conans.util.files import save, load, rmdir, mkdir, remove, sha1sum
 
 
 class TestDownloadCacheBackupSources:
@@ -156,7 +156,31 @@ class TestDownloadCacheBackupSources:
                             f"'{self.file_server.fake_url}/mycompanystorage2/']"})
         self.client.run("create .")
 
-        self.client.run("upload * -c -r=default")
+        self.client.run("upload * -c -r=default --format=json")
+        # To test the upload output command with backup sources
+        list_pkgs = json.loads(self.client.stdout)
+        assert list_pkgs["default"]["backup_sources"] == {
+            "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json": {
+                "file_path": f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json",
+                "url": f"{self.file_server.fake_url}/backups/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json",
+                "checksum": sha1sum(f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3.json")
+            },
+            "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3": {
+                "file_path": f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3",
+                "url": f"{self.file_server.fake_url}/backups/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3",
+                "checksum": sha1sum(f"{self.download_cache_folder}/s/315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3")
+            },
+            "744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json": {
+                "file_path": f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json",
+                "url": f"{self.file_server.fake_url}/backups/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json",
+                "checksum": sha1sum(f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df.json")
+            },
+            "744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df": {
+                "file_path": f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df",
+                "url": f"{self.file_server.fake_url}/backups/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df",
+                "checksum": sha1sum(f"{self.download_cache_folder}/s/744aca0436e2e355c285fa926a37997df488544589cec2260fc9db969a3c78df")
+            }
+        }
 
         # To test #15501 that it works even with extra files in the local cache
         extra_file_path = os.path.join(self.download_cache_folder, "s", "extrafile")
