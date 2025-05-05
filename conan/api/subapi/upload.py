@@ -3,15 +3,14 @@ import time
 from multiprocessing.pool import ThreadPool
 
 from conan.api.output import ConanOutput
+from conan.internal.api.upload import add_urls
 from conan.internal.conan_app import ConanApp
 from conan.internal.api.uploader import PackagePreparator, UploadExecutor, UploadUpstreamChecker, \
     gather_metadata
 from conan.internal.errors import AuthenticationException, ForbiddenException
 from conan.errors import ConanException
-from conan.internal.rest.client_routes import ClientV2Router
 from conan.internal.rest.file_uploader import FileUploader
 from conan.internal.rest.pkg_sign import PkgSignaturesPlugin
-from conan.internal.util.files import sha1sum
 
 
 class UploadAPI:
@@ -53,29 +52,6 @@ class UploadAPI:
         signer = PkgSignaturesPlugin(app.cache, app.cache_folder)
         # This might add files entries to package_list with signatures
         signer.sign(package_list)
-
-    @staticmethod
-    def add_urls(package_list, remote, backup_files, upload_url):
-        router = ClientV2Router(remote.url.rstrip("/"))
-        for ref, bundle in package_list.refs().items():
-            for f, fp in bundle.get("files", {}).items():
-                bundle.setdefault("urls", {})[f] = {
-                    'url': router.recipe_file(ref, f), 'checksum': sha1sum(fp)
-                }
-            for pref, prev_bundle in package_list.prefs(ref, bundle).items():
-                for f, fp in prev_bundle.get("files", {}).items():
-                    prev_bundle.setdefault("urls", {})[f] = {
-                        'url': router.package_file(pref, f), 'checksum': sha1sum(fp)
-                    }
-
-        if upload_url:
-            url = upload_url if upload_url.endswith("/") else upload_url + "/"
-            if backup_files:
-                for file in backup_files:
-                    basename = os.path.basename(file)
-                    package_list.recipes.setdefault('backup_sources', {})[basename] = {
-                        'file_path': file, 'url': url + basename, 'checksum': sha1sum(file)
-                    }
 
     def upload(self, package_list, remote):
         app = ConanApp(self.conan_api)
@@ -124,9 +100,9 @@ class UploadAPI:
             thread_pool.join()
         elapsed = time.time() - t
         ConanOutput().success(f"Upload completed in {int(elapsed)}s\n")
-        self.add_urls(package_list, remote,
-                      self.conan_api.cache.get_backup_sources(package_list),
-                      self.conan_api.config.global_conf.get("core.sources:upload_url", check_type=str))
+        add_urls(package_list, remote,
+                 self.conan_api.cache.get_backup_sources(package_list),
+                 self.conan_api.config.global_conf.get("core.sources:upload_url", check_type=str))
 
     def upload_backup_sources(self, files):
         config = self.conan_api.config.global_conf
