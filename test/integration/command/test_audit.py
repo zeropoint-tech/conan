@@ -183,12 +183,9 @@ def test_conan_audit_private():
     # TODO: If the CLI does not allow tokenless provider, should this case not be handled?
     tc.run("audit provider add myprivate --url=foo --type=private --token=f")
     # Now, remove the token as if the user didn't set it manually in the json
-    providers_json_path = os.path.join(tc.cache_folder, "audit_providers.json")
-    with open(providers_json_path, "r") as f:
-        providers_json = json.load(f)
-    providers_json["myprivate"].pop("token", None)
-    with open(providers_json_path, "w") as f:
-        json.dump(providers_json, f)
+    providers = json.loads(tc.load_home("audit_providers.json"))
+    providers["myprivate"].pop("token", None)
+    tc.save_home({"audit_providers.json", json.dumps(providers))
 
     tc.run("audit list zlib/1.2.11 -p=myprivate", assert_error=True)
     assert "Missing authentication token for 'myprivate' provider" in tc.out
