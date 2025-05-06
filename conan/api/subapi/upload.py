@@ -100,9 +100,7 @@ class UploadAPI:
             thread_pool.join()
         elapsed = time.time() - t
         ConanOutput().success(f"Upload completed in {int(elapsed)}s\n")
-        add_urls(package_list, remote,
-                 self.conan_api.cache.get_backup_sources(package_list),
-                 self.conan_api.config.global_conf.get("core.sources:upload_url", check_type=str))
+        add_urls(package_list, remote)
 
     def upload_backup_sources(self, files):
         config = self.conan_api.config.global_conf
