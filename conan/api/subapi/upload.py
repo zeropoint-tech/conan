@@ -7,10 +7,10 @@ from conan.internal.api.upload import add_urls
 from conan.internal.conan_app import ConanApp
 from conan.internal.api.uploader import PackagePreparator, UploadExecutor, UploadUpstreamChecker, \
     gather_metadata
+from conan.internal.rest.pkg_sign import PkgSignaturesPlugin
+from conan.internal.rest.file_uploader import FileUploader
 from conan.internal.errors import AuthenticationException, ForbiddenException
 from conan.errors import ConanException
-from conan.internal.rest.file_uploader import FileUploader
-from conan.internal.rest.pkg_sign import PkgSignaturesPlugin
 
 
 class UploadAPI:
