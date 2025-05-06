@@ -544,7 +544,7 @@ def test_upload_json_output():
     pkg = revs["packages"]["9e0f8140f0fe6b967392f8d5da9881e232e05ff8"]
     prev = pkg["revisions"]["f50f552c6e04b1f241e5f7864bc3957f"]
     assert pkg["info"] == {"settings": {"os": "Linux"}, "options": {"shared": "False"}}
-    assert revs["urls"] == {
+    assert revs["upload-urls"] == {
         "conanfile.py": {
             "url": f"{c.servers['default']}/v2/conans/liba/0.1/_/_/revisions/a565bd5defd3a99e157698fcc6e23b25/files/conanfile.py",
             "checksum": sha1sum(revs["files"]["conanfile.py"])
@@ -554,7 +554,7 @@ def test_upload_json_output():
             "checksum": sha1sum(revs["files"]["conanmanifest.txt"])
         }
     }
-    assert prev["urls"] == {
+    assert prev["upload-urls"] == {
         "conan_package.tgz": {
             "url": f"{c.servers['default']}/v2/conans/liba/0.1/_/_/revisions/a565bd5defd3a99e157698fcc6e23b25/packages/9e0f8140f0fe6b967392f8d5da9881e232e05ff8/revisions/f50f552c6e04b1f241e5f7864bc3957f/files/conan_package.tgz",
             "checksum": sha1sum(prev["files"]["conan_package.tgz"])
@@ -581,7 +581,7 @@ def test_upload_dry_run_json_output():
     pkg = revs["packages"]["9e0f8140f0fe6b967392f8d5da9881e232e05ff8"]
     prev = pkg["revisions"]["f50f552c6e04b1f241e5f7864bc3957f"]
     assert pkg["info"] == {"settings": {"os": "Linux"}, "options": {"shared": "False"}}
-    assert revs["urls"] == {
+    assert revs["upload-urls"] == {
         "conanfile.py": {
             "url": f"{c.servers['default']}/v2/conans/liba/0.1/_/_/revisions/a565bd5defd3a99e157698fcc6e23b25/files/conanfile.py",
             "checksum": sha1sum(revs["files"]["conanfile.py"])
@@ -591,7 +591,7 @@ def test_upload_dry_run_json_output():
             "checksum": sha1sum(revs["files"]["conanmanifest.txt"])
         }
     }
-    assert prev["urls"] == {
+    assert prev["upload-urls"] == {
         "conan_package.tgz": {
             "url": f"{c.servers['default']}/v2/conans/liba/0.1/_/_/revisions/a565bd5defd3a99e157698fcc6e23b25/packages/9e0f8140f0fe6b967392f8d5da9881e232e05ff8/revisions/f50f552c6e04b1f241e5f7864bc3957f/files/conan_package.tgz",
             "checksum": sha1sum(prev["files"]["conan_package.tgz"])
