@@ -185,7 +185,7 @@ def test_conan_audit_private():
     # Now, remove the token as if the user didn't set it manually in the json
     providers = json.loads(tc.load_home("audit_providers.json"))
     providers["myprivate"].pop("token", None)
-    tc.save_home({"audit_providers.json", json.dumps(providers))
+    tc.save_home({"audit_providers.json": json.dumps(providers)})
 
     tc.run("audit list zlib/1.2.11 -p=myprivate", assert_error=True)
     assert "Missing authentication token for 'myprivate' provider" in tc.out
