@@ -51,7 +51,7 @@ class TestCyclonedx:
         tc = TestClient()
         hook_path = os.path.join(tc.paths.hooks_path, "hook_sbom.py")
         save(hook_path, sbom_hook_post_package.format(cyclone_version=cyclone_version,
-                                                      add_build=True, add_tests=True))
+                                                      add_build=False, add_tests=False))
         return tc
 
     @pytest.fixture()
@@ -119,14 +119,14 @@ class TestCyclonedx:
     @pytest.mark.parametrize("l, n", [('"simple"', 1), ('"multi1", "multi2"', 2), ('("tuple1", "tuple2")', 2)])
     def test_multi_license(self, hook_setup_post_package, l, n):
         tc = hook_setup_post_package
-        conanfile = textwrap.dedent("""
+        conanfile = textwrap.dedent(f"""
             from conan import ConanFile
             class HelloConan(ConanFile):
                 name = 'foo'
                 version = '1.0'
-                license = %s
+                license = {l}
         """)
-        tc.save({"conanfile.py": conanfile % l})
+        tc.save({"conanfile.py": conanfile})
         tc.run("create .")
         create_layout = tc.created_layout()
         cyclone_path = os.path.join(create_layout.metadata(), "sbom.cdx.json")
