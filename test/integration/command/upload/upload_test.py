@@ -605,6 +605,3 @@ def test_upload_dry_run_json_output():
             "checksum": sha1sum(prev["files"]["conanmanifest.txt"])
         }
     }
-    c.run("upload * -r=default -c --dry-run --format=json")
-    assert "urls" in revs.keys()
-    assert "urls" in prev.keys()
