@@ -6,6 +6,7 @@ from urllib.parse import urlparse, urlsplit
 from contextlib import contextmanager
 
 from conan.api.output import ConanOutput
+from conan.internal.paths import find_file_walk_up
 from conan.internal.rest.file_downloader import FileDownloader
 from conan.errors import ConanException
 from conan.internal.util.files import mkdir, rmdir, remove, unzip, chdir
@@ -14,18 +15,18 @@ from conan.internal.util.runners import detect_runner
 
 class _ConanIgnoreMatcher:
     def __init__(self, conanignore_path, ignore=None):
-        conanignore_path = os.path.abspath(conanignore_path)
         self._ignored_entries = {".conanignore"}
         self._included_entries = set()
-        if os.path.exists(conanignore_path):
-            with open(conanignore_path, 'r') as conanignore:
-                for line in conanignore:
-                    line_content = line.split("#", maxsplit=1)[0].strip()
-                    if line_content:
-                        if line_content.startswith("!"):
-                            self._included_entries.add(line_content[1:])
-                        else:
-                            self._ignored_entries.add(line_content)
+        if conanignore_path is None or not os.path.exists(conanignore_path):
+            return
+        with open(conanignore_path, 'r') as conanignore:
+            for line in conanignore:
+                line_content = line.split("#", maxsplit=1)[0].strip()
+                if line_content:
+                    if line_content.startswith("!"):
+                        self._included_entries.add(line_content[1:])
+                    else:
+                        self._ignored_entries.add(line_content)
         if ignore:
             self._ignored_entries.update(ignore)
 
@@ -127,13 +128,13 @@ def _process_file(directory, filename, config, cache_folder, folder):
         output.info("Copying file %s to %s" % (filename, target_folder))
         _filecopy(directory, filename, target_folder)
 
-
 def _process_folder(config, folder, cache_folder, ignore=None):
     if not os.path.isdir(folder):
         raise ConanException("No such directory: '%s'" % str(folder))
+    original_folder = folder
     if config.source_folder:
         folder = os.path.join(folder, config.source_folder)
-    conanignore_path = os.path.join(folder, '.conanignore')
+    conanignore_path = find_file_walk_up(folder, ".conanignore", end=original_folder)
     conanignore = _ConanIgnoreMatcher(conanignore_path, ignore)
     for root, dirs, files in os.walk(folder):
         # .git is always ignored by default, even if not present in .conanignore
